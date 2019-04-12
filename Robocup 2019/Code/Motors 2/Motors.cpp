@@ -23,6 +23,10 @@ void Motors::MotorsInit(){
   pinMode(_M3DIR, OUTPUT);
   pinMode(_M4CS, INPUT);
   pinMode(_M4DIR, OUTPUT);
+  pinMode(_DBDIR, OUTPUT);  //DIR HIGH = A->B
+  pinMode(_DBSLP, OUTPUT);  //SLP Default = LOW. Must turn HIGH to run
+  pinMode(_DBPWM, OUTPUT);   //Analog PWM  0-255
+  pinMode(_DBCS, INPUT);
   pinMode(31, OUTPUT); //dribbler init
 
 
@@ -181,6 +185,18 @@ void Motors::stopMotors(){
     setM2Speed(0);
     setM3Speed(0);
     setM4Speed(0);
+}
+
+void Motors::dribble() {
+  	if (checkMotorSwitchOn() == true) {
+  		digitalWrite(_DBDIR, HIGH);
+  		digitalWrite(_DBSLP, HIGH);
+  		analogWrite(_DBPWM, 255);
+  	} else {
+  		digitalWrite(_DBDIR, LOW);
+  		digitalWrite(_DBSLP, LOW);
+  		analogWrite(_DBPWM, 0);
+  	}
 }
 
 void Motors::driveToHeading(float angle, float speed){

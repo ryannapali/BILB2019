@@ -32,6 +32,8 @@ class Motors {
 
 		void stopMotors();
 
+		void dribble();
+
 		void driveToHeading(float angle, float speed);
 
 	private:
@@ -53,6 +55,11 @@ class Motors {
 		unsigned char _M2DIR = 5;
 		unsigned char _M3DIR = 6;
 		unsigned char _M4DIR = 7;
+
+		unsigned int _DBDIR = 11;
+		unsigned int _DBSLP = 24;
+		unsigned int _DBPWM = 8;
+		unsigned int _DBCS = 15;
 
 		unsigned char _M1CS = A15;
 		unsigned char _M2CS = A17;

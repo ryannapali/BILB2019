@@ -8,5 +8,5 @@ void setup() {
 
 void loop() {
   motor.driveToHeading(0, 100);
-  
+  motor.dribble();
 }
