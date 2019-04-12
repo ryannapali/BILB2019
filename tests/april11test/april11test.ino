@@ -16,12 +16,13 @@ unsigned char QTR_PINS[] = {A0, A1, A2, A3};
 Adafruit_BNO055 bno = Adafruit_BNO055();
 
 Motors motor = Motors();
-
+float ballAngle;
 float xTargetAngle = 180;
 QTRSensorsAnalog qtrs = QTRSensorsAnalog(QTR_PINS, 4, 4, INTERRUPT_PIN);
 
 void setup() {
-  Serial.begin(9600);
+//  Serial.begin(9600);
+  Serial5.begin(19200);
   Serial.println("Orientation Sensor Raw Data Test"); Serial.println("");
 
   /* Initialize the sensor */
@@ -32,42 +33,75 @@ void setup() {
   }
 
   delay(1000);
-  
   bno.setExtCrystalUse(true);
 
   Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
 }
 
-float xPos;
-float yPos;
+float xPos = 1;
+float yPos = 1;
+float tPos = 1;
+float oPos = 1;
+
+void clearCameraBuffer() {
+  Serial5.clear();
+}
+
 void getCameraReadings() {
-  if (Serial2.available() > 0) {
-    char highChar1 = Serial2.read();
-    char lowChar1 = Serial2.read();
-    char highChar2 = Serial2.read();
-    char lowChar2 = Serial2.read();
-    // say what you got:
-    xPos = word(highChar1, lowChar1);
-    yPos = word(highChar2, lowChar2);
+
+  char lc = Serial5.read();
+  long bTimer = millis();
+//  Serial.println(millis());
+  while (word(0, lc) != 254) {
+    lc = Serial5.read();
+    if (bTimer + 400 < millis()) {
+      clearCameraBuffer();
+      bTimer = millis();
+    }
   }
+  while (Serial5.available() < 2) {
+//    if (currentState == ON_LINE) break;
+  }
+  char highChar1 = Serial5.read();
+  char lowChar1 = Serial5.read();
+  while (Serial5.available() < 2) {
+//    if (currentState == ON_LINE) break;
+  }
+  char highChar2 = Serial5.read();
+  char lowChar2 = Serial5.read();
+  while (Serial5.available() < 2) {
+//    if (currentState == ON_LINE) break;
+  }
+  char highChar3 = Serial5.read();
+  char lowChar3 = Serial5.read();
+  while (Serial5.available() < 2) {
+//    if (currentState == ON_LINE) break;
+  }
+  char highChar4 = Serial5.read();
+  char lowChar4 = Serial5.read();
+  
+  // say what you got:
+  xPos = word(highChar1, lowChar1);
+  yPos = word(highChar2, lowChar2);
+  tPos = word(highChar3, lowChar3);
+  oPos = word(highChar4, lowChar4);
+  Serial.print(xPos);
+  Serial.print(" ");
+  Serial.println(yPos);
 }
 
 float duration;
 int cycles = 0;
+int counter = 0;
 void loop() {
+  getCameraReadings();
+
   duration = millis()/1000.0 - cycles*2.0;
   motor.dribble();
-
+  calculateAngle();
+  spinToBall();
   unsigned int qtr_values[4];
   qtrs.read(qtr_values);
-  
-//  Serial.println(qtr_values[0]);
-  Serial.print(xPos);
-  Serial.print(" ");
-  Serial.println(yPos);
-  //Serial.println(qtr_values[1]);
-  //Serial.println(qtr_values[2]);
-  //Serial.println(qtr_values[3]);
 
   imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
   
@@ -83,26 +117,39 @@ void loop() {
   }
 
   /* Calculate required turning power */
-  int power = 1000.0*adjustedAngle/360.0;
   
-  if (power < DEAD_ZONE and power > -DEAD_ZONE) {
-    power = 0;
-  }
-  
-  power = min(power, MAX_TURNING_POWER);
-  power = max(power, -MAX_TURNING_POWER);
+}
 
-  /* Drive, turn, repeat */
-  if (duration < 3.0 and duration > 2.0) {
-    motor.driveToHeading(-adjustedAngle, 170);
-  } else if (duration < 4.0) {
-    motor.spin(power);
+void spinToBall() {
+  float k = 1;
+  motor.spin(ballAngle * k);
+}
+
+void calculateAngle() {
+  // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
+  if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
+    ballAngle = 2000;
   } else {
-    cycles+=1;
-    xTargetAngle -= 180;
-    if (xTargetAngle < 0) {
-      xTargetAngle = 180;
+    xPos = xPos - 640; //makes the center of the screen (640*480) 0 instead of having it be top left corner
+    yPos = yPos - 480;
+
+    xPos = xPos * -1;
+    yPos = yPos * -1;
+    double m = (float)(yPos) / (float)(xPos);
+    ballAngle = atan((double)m);
+    ballAngle = ballAngle * 57296 / 1000;
+    if (xPos < 0 && yPos < 0) ballAngle = ballAngle + 180;
+    else if (xPos > 0 && yPos < 0) ballAngle = ballAngle + 360;
+    else if (xPos < 0 && yPos > 0) ballAngle = ballAngle + 180;
+
+    //comment two lines out if orientation is flipped 180 degrees
+    ballAngle = ballAngle + 180;
+    if (ballAngle > 360) ballAngle = ballAngle - 360;
+
+    ballAngle = ballAngle - 180;
+
+    if (m == .75) { //needs to be at end so overrides any other calculations
+      ballAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
     }
   }
-//  delay(BNO055_SAMPLERATE_DELAY_MS);
 }
