@@ -1,5 +1,8 @@
 #include "Arduino.h"
 #include "Motors.h"
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
 
 Motors::Motors(){
 	MotorsInit();
@@ -34,6 +37,8 @@ void Motors::MotorsInit(){
   analogWriteFrequency(4, 58593);
   analogWriteFrequency(29, 58593);
   analogWriteFrequency(30, 58593);
+    
+  bno = Adafruit_BNO055();
 }
 
 void Motors::buttonInit() {
@@ -180,7 +185,7 @@ float Motors::getRad(float angle) {
   return angle * 0.01745329251;
 }
 
-void Motors::stopMotors(){
+void Motors::stopMotors() {
 	setM1Speed(0);
     setM2Speed(0);
     setM3Speed(0);
@@ -199,7 +204,7 @@ void Motors::dribble() {
   	}
 }
 
-void Motors::driveToHeading(float angle, float speed){
+void Motors::driveToHeading(float angle, float speed) {
 	float rad = getRad(angle);
   	float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
 
@@ -209,12 +214,44 @@ void Motors::driveToHeading(float angle, float speed){
   	setM4Speed(-speed * proportionals[3]);
 }
 
-void Motors::driveToHeadingGyro(float angle, float speed){
-	float rad = getRad(angle);
-  	float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
+void Motors::driveToHeadingGyro(float targetAngle, float maxSpeed) {
+    float adjustedAngle = getAdjustedAngle();
+    int correctCycles = 0;
+    while (correctCycles < 10) {
+        if (abs(adjustedAngle) < DEAD_ANGLE_ZONE) {
+            correctCycles++;
+        } else {
+            correctCycles = 0;
+        }
+        /* Calculate required turning power */
+        int power = 1000.0*adjustedAngle/360.0;
+    
+        if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
+            power = 0;
+        }
+    
+        power = std::min(power, maxSpeed);
+        power = std::max(power, -maxSpeed);
+    
+        motor.spin(power);
+        
+        adjustedAngle = getAdjustedAngle();
+    }
+    
+    stopMotors();
+}
 
- 	setM1Speed(-speed * proportionals[0]);
- 	setM2Speed(-speed * proportionals[1]);
-  	setM3Speed(-speed * proportionals[2]);
-  	setM4Speed(-speed * proportionals[3]);
+float Motors::getAdjustedAngle(float targetAngle) {
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+    float currentAngle = euler.x();
+    
+    float adjustedAngle = currentAngle - targetAngle;
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    if (adjustedAngle >= 180) {
+        adjustedAngle -= 360;
+    }
+    
+    return adjustedAngle;
 }

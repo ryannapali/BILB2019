@@ -3,6 +3,9 @@
 
 #include "Arduino.h"
 #include "Adafruit_VL6180X.h"
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
 
 class Motors {
 	public:
@@ -36,10 +39,13 @@ class Motors {
 
 		void driveToHeading(float angle, float speed);
 
+        float Motors::getAdjustedAngle(float targetAngle)
 	private:
 		void MotorsInit();
 		void buttonInit();
 		bool checkMotorSwitchOn();
+    
+        Adafruit_BNO055 bno;
 
 		unsigned int _offsetM1;
 		unsigned int _offsetM2;
@@ -51,6 +57,9 @@ class Motors {
 		static const unsigned char _M3PWM = 29;
 		static const unsigned char _M4PWM = 30;
 
+        static const unsigned char DEAD_POWER_ZONE = 10;
+        static const unsigned char DEAD_ANGLE_ZONE = 3;
+    
 		unsigned char _M1DIR = 2;
 		unsigned char _M2DIR = 5;
 		unsigned char _M3DIR = 6;
@@ -68,8 +77,6 @@ class Motors {
 
 		int max_speed = 255;
 		int pause = 10;
-
-
 
 };
 
