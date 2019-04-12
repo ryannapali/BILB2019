@@ -13,7 +13,7 @@ LIDARS::LIDARS() {
     Wire.begin();
 }
 
-float readSensor(uint8_t deviceAddress) {
+float LIDARS::readSensor(uint8_t deviceAddress) {
     Wire.beginTransmission(deviceAddress);
     Wire.write(0x01);
     Wire.write(0x02);
@@ -56,18 +56,18 @@ float readSensor(uint8_t deviceAddress) {
     return distance/2.54;
 }
 
-float readSensor1() {
+float LIDARS::readSensor1() {
     return readSensor(SENSOR_1);
 }
 
-float readSensor2() {
+float LIDARS::readSensor2() {
     return readSensor(SENSOR_2);
 }
 
-float readSensor3() {
+float LIDARS::readSensor3() {
     return readSensor(SENSOR_3);
 }
 
-float readSensor4() {
+float LIDARS::readSensor4() {
     return readSensor(SENSOR_4);
 }

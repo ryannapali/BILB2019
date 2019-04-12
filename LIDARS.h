@@ -14,7 +14,12 @@
 
 class LIDARS {
 public:
-
+    LIDARS();
+    float readSensor1();
+    float readSensor2();
+    float readSensor3();
+    float readSensor4();
+    
 private:
     const byte DEFAULT_SENSOR = 0x10; //TFMini I2C Address
     
@@ -26,6 +31,6 @@ private:
     const byte SENSOR_2 = 0x14;
     const byte SENSOR_3 = 0x16;
     const byte SENSOR_4 = 0x18;
-}
+};
 
 #endif
