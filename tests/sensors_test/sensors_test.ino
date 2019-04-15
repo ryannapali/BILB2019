@@ -3,40 +3,25 @@
 
 #include <Wire.h>
 #include <QTRSensors.h>
-#include "Adafruit_VL6180X.h"
+//#include "Adafruit_VL6180X.h"
 
-/* Set the delay between fresh samples */
-#define BNO055_SAMPLERATE_DELAY_MS 100
 #define INTERRUPT_PIN 39
 
 #define IR_FRONT 20
 #define IR_BACK 16
 
-unsigned char QTR_PINS[] = {A0, A1, A2, A3};
+Adafruit_VL6180X vl = Adafruit_VL6180X();
 
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
 
-
 float ballAngle;
-
-QTRSensorsAnalog qtrs = QTRSensorsAnalog(QTR_PINS, 4, 4, INTERRUPT_PIN);
 
 void setup() {
   Serial5.begin(19200);
-  Serial.println("Orientation Sensor Raw Data Test"); Serial.println("");
-
-  /* Initialize the sensor */
-  if(!bno.begin())
-  {
-    Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
-    while(1);
-  }
-
-  delay(1000);
-  bno.setExtCrystalUse(true);
-
-  Serial.println("Calibration status values: 0=uncalibrated, 3=fully calibrated");
+  
+  pinMode(INTERRUPT_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
 }
 
 float xPos = 1;
@@ -51,7 +36,7 @@ void clearCameraBuffer() {
 void getCameraReadings() {
   char lc = Serial5.read();
   long bTimer = millis();
-//  Serial.println(millis());
+
   while (word(0, lc) != 254) {
     lc = Serial5.read();
     if (bTimer + 400 < millis()) {
@@ -80,48 +65,38 @@ void getCameraReadings() {
   char highChar4 = Serial5.read();
   char lowChar4 = Serial5.read();
   
-  // say what you got:
   xPos = word(highChar1, lowChar1);
   yPos = word(highChar2, lowChar2);
   tPos = word(highChar3, lowChar3);
   oPos = word(highChar4, lowChar4);
-  Serial.print("Ball position: ");
-  Serial.print(xPos);
-  Serial.print("   ");
-  Serial.println(yPos);
 }
 
-float duration;
-int cycles = 0;
-int counter = 0;
 void loop() {
   getCameraReadings();
 
-//  duration = millis()/1000.0 - cycles*2.0;
-//  motor.dribble();
+//  Serial.print("Adjusted angle: ");
+//  Serial.println(motor.getAdjustedAngle(0));
 //  calculateAngle();
-//  spinToBall();
-
-  unsigned int qtr_values[4];
-  qtrs.read(qtr_values);
-
-  Serial.print("QTR value: ");
-  Serial.println(qtr_values[0]);
-  Serial.print("Adjusted angle: ");
-  Serial.println(motor.getAdjustedAngle(0));
-  Serial.print("LIDAR 1 distance: ");
-  Serial.println(lidars.readSensor1());
-  Serial.print("LIDAR 2 distance: ");
-  Serial.println(lidars.readSensor2());
-  Serial.print("IR distances: ");
-  Serial.print(analogRead(IR_FRONT));
-  Serial.print("   ");
-  Serial.println(analogRead(IR_BACK));
+//  Serial.println(ballAngle);
+//  Serial.print("LIDAR 1 distance: ");
+//  Serial.println(lidars.readSensor1());
+//  Serial.print("LIDAR 2 distance: ");
+//  Serial.println(lidars.readSensor2());
+//  Serial.print("IR distances: ");
+//  Serial.println(analogRead(IR_FRONT));
+//  Serial.print("   ");
+//  Serial.println(analogRead(IR_BACK));
+//  Serial.print("Dribbler TOF: ");
+//  Serial.println(vl.readRange());
+//  Serial.print("Ball position: ");
+//  Serial.print(xPos);
+//  Serial.print("   ");
+//  Serial.println(yPos);
 }
 
-void spinToBall() {
-  float k = 1;
-  motor.spin(ballAngle * k);
+void interrupt() {
+  // Slave is delayed due to other errands
+  Serial.println("                      On the line :)");
 }
 
 void calculateAngle() {
@@ -129,25 +104,16 @@ void calculateAngle() {
   if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
     ballAngle = 2000;
   } else {
-    xPos = xPos - 640; //makes the center of the screen (640*480) 0 instead of having it be top left corner
-    yPos = yPos - 480;
-
-    xPos = xPos * -1;
-    yPos = yPos * -1;
     double m = (float)(yPos) / (float)(xPos);
     ballAngle = atan((double)m);
-    ballAngle = ballAngle * 57296 / 1000;
-    if (xPos < 0 && yPos < 0) ballAngle = ballAngle + 180;
-    else if (xPos > 0 && yPos < 0) ballAngle = ballAngle + 360;
-    else if (xPos < 0 && yPos > 0) ballAngle = ballAngle + 180;
+    ballAngle *= 57.2957795129;
+    if (xPos < 0) {
+      ballAngle += 180;
+    } else if (yPos < 0) {
+      ballAngle += 360;
+    }
 
-    //comment two lines out if orientation is flipped 180 degrees
-    ballAngle = ballAngle + 180;
-    if (ballAngle > 360) ballAngle = ballAngle - 360;
-
-    ballAngle = ballAngle - 180;
-
-    if (m == .75) { //needs to be at end so overrides any other calculations
+    if (m == .75) {
       ballAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
     }
   }

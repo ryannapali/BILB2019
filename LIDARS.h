@@ -1,6 +1,6 @@
 //
 //  LIDARS.h
-//  
+//
 //
 //  Created by Tibor Rothschild on 4/12/19.
 //
@@ -15,12 +15,15 @@
 class LIDARS {
 public:
     LIDARS();
+    
     float readSensor1();
     float readSensor2();
     float readSensor3();
     float readSensor4();
     
 private:
+    float readSensor(uint8_t deviceAddress);
+    
     const byte DEFAULT_SENSOR = 0x10; //TFMini I2C Address
     
     uint16_t distance = 0; //distance
