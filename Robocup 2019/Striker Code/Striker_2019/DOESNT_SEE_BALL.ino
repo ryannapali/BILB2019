@@ -18,7 +18,6 @@ void doesnt_see_ball() {
     IMU_spinToDirection(g_goal);
   }
   else if (millis() - lastTimeSawBall >= 3000 && millis() - lastTimeSawBall <= 7000) { //tries to get back to center for 4 seconds
-    updateDistances();
     int x = (rightDist >= leftDist) ? 1 : -1;
     int y = (frontDist >= backDist) ? 1 : -1;
 

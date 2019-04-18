@@ -5,14 +5,13 @@ void getInBounds() {
   pointDirection = (abs(IMU_calcError(g_goal)) <  abs(IMU_calcError(g_goal + 180))) ? g_goal : (g_goal + 180);
   IMU_spinToDirection(pointDirection);
   for (int i = 0; i < 10000; i++) {
-    updateDistances();
     int x = 0;
     int y = 0;
     boolean isClear = true;
-    boolean r = rightClear();
-    boolean l = leftClear();
-    boolean f = frontClear();
-    boolean b = backClear();
+    boolean r = 0;//rightClear();
+    boolean l = 0;//leftClear();
+    boolean f = 0;//frontClear();
+    boolean b = 0;//backClear();
     if (!r) x--, isClear = false;
     if (!l) x++, isClear = false;
     if (!f) y--, isClear = false;

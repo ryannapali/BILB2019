@@ -1,6 +1,4 @@
 void scoreGoal() {
-  updateDistances();
-  printDistances();
   boolean forwards = abs(IMU_calcError(g_goal)) < 90;
   if (checkPossession() == false) {
     setRGB(100, 100, 0);
@@ -17,7 +15,6 @@ void scoreGoal() {
       dribblerIn();
       spinSlowCheckPossesion(g_goal);
       facingGoal = true;
-      updateDistances();
     }
     if (frontDist + backDist > 200 && frontDist >= 40) { //clear in front and back direction
       straightForwardsShoot();
@@ -43,7 +40,6 @@ void scoreGoal() {
       dribblerIn();
       spinSlowCheckPossesion(g_goal + 180);
       facingGoal = true;
-      updateDistances();
     }
     if (frontDist + backDist > 200 && backDist >= 40) { //clear in front and back direction
       setRGB(0, 255, 0);

@@ -2,13 +2,11 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-//#include <LIDARLite.h>
 #include <algorithm>
 #include <math.h>
 #include "Adafruit_VL6180X.h"
 #include <SharpIR.h>
 
-LIDARLite myLidarLite;
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 
 #include "robotDefines.h"
