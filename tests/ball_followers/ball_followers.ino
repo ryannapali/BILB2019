@@ -68,7 +68,7 @@ void loop() {
 
 float getBTerm() {
   // Coordinates flipped because stupid
-  backXPos = xPos - 30;
+  float backXPos = xPos - 30;
   if (yPos > 0) {
     return backXPos/(yPos - (yPos*yPos)/(2*(yPos - 10)));
   } else {
