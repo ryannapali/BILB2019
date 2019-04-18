@@ -3,8 +3,8 @@
 
 Motors motor = Motors();
 
-#define MAX_SPEED 180;
-float speedScalar = MAX_SPEED/200;
+#define MAX_SPEED 180
+float speedScalar = MAX_SPEED/200.0;
 
 float ballAngle;
 
@@ -27,7 +27,7 @@ void loop() {
 
 // Quadratic spliner
   if (xPos < 0) {
-    velocityVectorAngle = atan(1.0/getSlopeTangentToSpline()(double));
+    float velocityVectorAngle = atan(1.0/getSlopeTangentToSpline());
     velocityVectorAngle *= 57.2957795129;
     if (xPos < 0) {
       velocityVectorAngle += 180;
@@ -68,11 +68,11 @@ void loop() {
 
 float getBTerm() {
   // Coordinates flipped because stupid
-  backXPos = xPos - 30;
+  float backXPos = xPos - 30.0;
   if (yPos > 0) {
-    return backXPos/(yPos - (yPos*yPos)/(2*(yPos - 10)));
+    return backXPos/(yPos - (yPos*yPos)/(2.0*(yPos - 10.0)));
   } else {
-    return backXPos/(yPos - (yPos*yPos)/(2*(yPos + 10)));
+    return backXPos/(yPos - (yPos*yPos)/(2.0*(yPos + 10.0)));
   }
 }
 
