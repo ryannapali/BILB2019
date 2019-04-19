@@ -235,7 +235,7 @@ void Motors::driveToHeading(float angle, float speed) {
     setM4Speed(-speed * proportionals[3]);
 }
 
-void Motors::driveToHeadingCorrected(float angle, float speed) {
+void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float speed) {
     float adjustedAngle = angle - 180;
     if (adjustedAngle < 0) {
         adjustedAngle += 360;
@@ -251,9 +251,9 @@ void Motors::driveToHeadingCorrected(float angle, float speed) {
     float rad = getRad(adjustedAngle);
     float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
     
-    adjustedAngle = getAdjustedAngle(0.0);
+    adjustedAngle = getAdjustedAngle(targetOrientation) - getAdjustedAngle(0.0);
     
-    int power = 1000.0*adjustedAngle/360.0;
+    int power = 500.0*adjustedAngle/360.0;
     
     if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
         power = 0;

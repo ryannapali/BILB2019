@@ -39,7 +39,7 @@ public:
     
     void driveToHeading(float angle, float speed);
     
-    void driveToHeadingCorrected(float angle, float speed);
+    void driveToHeadingCorrected(float angle, float targetOrientation, float speed);
     
     void turnToHeadingGyro(float targetAngle, float maxSpeed);
     

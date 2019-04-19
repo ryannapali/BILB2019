@@ -8,6 +8,8 @@ float speedScalar = MAX_SPEED/200.0;
 
 float ballAngle;
 
+float k = 20.0;
+
 void setup() {
   // put your setup code here, to run once:
   Serial5.begin(19200);
@@ -24,19 +26,28 @@ float oldYPos = 1;
 
 void loop() {
   getCameraReadings();
-
+  calculateAngle();
+//  float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
+//    motor.driveToHeadingCorrected(90, ballAngle, min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
+  Serial.println(ballAngle);
+  motor.turnToHeadingGyro(ballAngle-motor.getAdjustedAngle(0.0), MAX_SPEED);
+  motor.dribble();
+  return;
+  
 // Quadratic spliner
-  if (xPos < 0) {
-    float velocityVectorAngle = atan(1.0/getSlopeTangentToSpline());
-    velocityVectorAngle *= 57.2957795129;
-    if (xPos < 0) {
-      velocityVectorAngle += 180;
-    } else if (yPos < 0) {
-      velocityVectorAngle += 360;
-    }
-    float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-    motor.driveToHeadingCorrected(velocityVectorAngle, min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
-  }
+//    float velocityVectorAngle = atan(1.0/getBQuadraticTerm());
+//    velocityVectorAngle *= 57.2957795129;
+//    if (xPos-30 < 0) {
+//      velocityVectorAngle += 180;
+//    } else if (yPos < 0) {
+//      velocityVectorAngle += 360;
+//    }
+//    if (velocityVectorAngle < 0) {
+//      velocityVectorAngle += 180;
+//    }
+//    float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
+//    motor.driveToHeadingCorrected(velocityVectorAngle, ballAngle, min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
+
 // Diagonal ball follower:
 //  calculateAngle();
 //  if (ballAngle < 180) ballAngle += 20;
@@ -66,19 +77,15 @@ void loop() {
   motor.dribble();
 }
 
-float getBTerm() {
+float getBQuadraticTerm() {
   // Coordinates flipped because stupid
   float backXPos = xPos - 30.0;
-  if (yPos > 0) {
-    return backXPos/(yPos - (yPos*yPos)/(2.0*(yPos - 10.0)));
-  } else {
-    return backXPos/(yPos - (yPos*yPos)/(2.0*(yPos + 10.0)));
-  }
+  return (2.0*(backXPos-k)*(yPos + (abs(yPos)/yPos)*sqrt((k*yPos*yPos)/(k-backXPos))))/(yPos*yPos);
 }
 
-float getSlopeTangentToSpline() {
-  // Evaluating the derivative at 0 leaves just the b term
-  return getBTerm();
+float getSlopeCubic() {
+  float backXPos = xPos - 30.0;
+  return (3*backXPos*(10*xPos/abs(xPos)))/(yPos*yPos*yPos);
 }
 
 void clearCameraBuffer() {
