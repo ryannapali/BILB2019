@@ -1,8 +1,19 @@
 
 float getBQuadraticTerm() {
   // Coordinates flipped because stupid
+  // such goofs avert your eyes
   float backXPos = xPos - 30.0;
-  return (2.0*(backXPos-k)*(yPos + (abs(yPos)/yPos)*sqrt((k*yPos*yPos)/(k-backXPos))))/(yPos*yPos);
+//  if (backXPos < k and abs(yPos) > 10) {
+//    return (2.0*(backXPos-k)*(yPos + (abs(yPos)/yPos)*sqrt((k*yPos*yPos)/(k-backXPos))))/(yPos*yPos);
+//  } else {
+//    // Do sideways quadratic
+//    return 2.0*yPos/backXPos;
+//  }
+  if (backXPos < 0) {
+    return 2*backXPos/yPos;
+  } else {
+    return 0.5*backXPos/yPos;
+  }
 }
 
 void clearCameraBuffer() {
