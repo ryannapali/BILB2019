@@ -10,9 +10,9 @@ float getBQuadraticTerm() {
 //    return 2.0*yPos/backXPos;
 //  }
   if (backXPos < 0) {
-    return 2*backXPos/yPos;
+    return 8*backXPos/yPos;
   } else {
-    return 0.5*backXPos/yPos;
+    return 0.125*backXPos/yPos;
   }
 }
 
@@ -60,14 +60,14 @@ void getCameraReadings() {
     xPos *= -1;
     xPos += 35;
   } else {
-    xPos = oldXPos;
+//    xPos = oldXPos;
   }
   oldXPos = xPos;
 
   if (yPos != 0) {
     yPos -= 480;
   } else {
-    yPos = oldYPos;
+//    yPos = oldYPos;
   }
   oldYPos = yPos;
 }

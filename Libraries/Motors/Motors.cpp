@@ -27,11 +27,12 @@ void Motors::MotorsInit(){
     pinMode(_M4CS, INPUT);
     pinMode(_M4DIR, OUTPUT);
     pinMode(_DBDIR, OUTPUT);  //DIR HIGH = A->B
-    pinMode(_DBSLP, OUTPUT);  //SLP Default = LOW. Must turn HIGH to run
+    pinMode(_MTRSLP, OUTPUT);  //SLP Default = LOW. Must turn HIGH to run
     pinMode(_DBPWM, OUTPUT);   //Analog PWM  0-255
     pinMode(_DBCS, INPUT);
     pinMode(31, OUTPUT); //dribbler init
     
+    digitalWrite(_MTRSLP, HIGH);
     
     analogWriteFrequency(3, 58593);
     analogWriteFrequency(4, 58593);
@@ -204,11 +205,9 @@ void Motors::stopMotors() {
 void Motors::dribble() {
     if (checkMotorSwitchOn() == true) {
         digitalWrite(_DBDIR, HIGH);
-        digitalWrite(_DBSLP, HIGH);
         analogWrite(_DBPWM, 255);
     } else {
         digitalWrite(_DBDIR, LOW);
-        digitalWrite(_DBSLP, LOW);
         analogWrite(_DBPWM, 0);
     }
 }
@@ -250,10 +249,9 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
     
     float rad = getRad(adjustedAngle);
     float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
+    adjustedAngle = getAdjustedAngle(targetOrientation);
     
-    adjustedAngle = getAdjustedAngle(targetOrientation) - getAdjustedAngle(0.0);
-    
-    int power = 500.0*adjustedAngle/360.0;
+    int power = (200000.0/speed)*adjustedAngle/360.0;
     
     if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
         power = 0;
