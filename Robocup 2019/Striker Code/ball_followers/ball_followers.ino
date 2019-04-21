@@ -2,15 +2,28 @@
 #include "LIDARS.h"
 
 Motors motor = Motors();
+LIDARS lidars = LIDARS();
 
-#define MAX_SPEED 180;
-float speedScalar = MAX_SPEED/200;
+#define MAX_SPEED 180
+#define INTERRUPT_PIN 39
+
+float speedScalar = MAX_SPEED/150.0;
 
 float ballAngle;
+
+float k = 20.0;
 
 void setup() {
   // put your setup code here, to run once:
   Serial5.begin(19200);
+  Serial.begin(115200);
+  pinMode(INTERRUPT_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
+}
+
+bool interrupted = false;
+void interrupt() {
+  interrupted = true;
 }
 
 float xTargetDiff = 1000;
@@ -22,111 +35,101 @@ float oPos = 1;
 float oldXPos = 1;
 float oldYPos = 1;
 
-void loop() {
-  getCameraReadings();
-
-// Diagonal ball follower:
-  calculateAngle();
-  if (ballAngle < 180) ballAngle += 20;
-  else ballAngle -= 20;
-  if (ballAngle != 10000) {
-      float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-      motor.driveToHeadingCorrected(ballAngle, min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
+bool turnFixed = false;
+void loop() {  
+  if (interrupted) {
+    fixOutOfBounds();
+    return;
   }
-
-// Zig-zag ball follower:
-//  xTargetDiff = 100 - xPos;
-//
-//  if (abs(xTargetDiff) > 50) { 
-//    if (xTargetDiff > 0) {
-//      motor.driveToHeadingCorrected(180, min(MAX_SPEED, abs(xTargetDiff)*speedScalar));
-//    } else {
-//      motor.driveToHeadingCorrected(0, min(MAX_SPEED, abs(xTargetDiff)*speedScalar));
-//    }
-//  } else {
-//    if (yPos > 0) {
-//      motor.driveToHeadingCorrected(270, min(MAX_SPEED, abs(yPos)*speedScalar*2));
-//    } else {
-//      motor.driveToHeadingCorrected(90, min(MAX_SPEED, abs(yPos)*speedScalar*2));
-//    }
-//  }
 
   motor.dribble();
+
+  getCameraReadings();
+  calculateAngle();
+
+  if (xPos == 0 or yPos == 0) {
+    motor.stopMotors();
+    return;
+  }
+
+//  quadraticBall();
+  diagonalBall();
 }
 
-void clearCameraBuffer() {
-  Serial5.clear();
+void zigBall(){
+  xTargetDiff = 100 - xPos;
+
+  if (abs(xTargetDiff) > 50) { 
+    if (xTargetDiff > 0) {
+      motor.driveToHeadingCorrected(180, 0.0, min(MAX_SPEED, abs(xTargetDiff)*speedScalar));
+    } else {
+      motor.driveToHeadingCorrected(0, 0.0, min(MAX_SPEED, abs(xTargetDiff)*speedScalar));
+    }
+  } else {
+    if (yPos > 0) {
+      motor.driveToHeadingCorrected(270, 0.0, min(MAX_SPEED, abs(yPos)*speedScalar*2));
+    } else {
+      motor.driveToHeadingCorrected(90, 0.0, min(MAX_SPEED, abs(yPos)*speedScalar*2));
+    }
+  }
 }
 
-void getCameraReadings() {
-  char lc = Serial5.read();
-  long bTimer = millis();
-  while (word(0, lc) != 254) {
-    lc = Serial5.read();
-    if (bTimer + 400 < millis()) {
-      clearCameraBuffer();
-      bTimer = millis();
-    }
-  }
-  while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
-  }
-  char highChar1 = Serial5.read();
-  char lowChar1 = Serial5.read();
-  while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
-  }
-  char highChar2 = Serial5.read();
-  char lowChar2 = Serial5.read();
-  while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
-  }
-  char highChar3 = Serial5.read();
-  char lowChar3 = Serial5.read();
-  while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
-  }
-  char highChar4 = Serial5.read();
-  char lowChar4 = Serial5.read();
-  
-  xPos = word(highChar1, lowChar1);
-  yPos = word(highChar2, lowChar2);
-  tPos = word(highChar3, lowChar3);
-  oPos = word(highChar4, lowChar4);
-  if (xPos != 0) {
-    xPos -= 640;
-    xPos *= -1;
-    xPos += 35;
-  } else {
-    xPos = oldXPos;
-  }
-  oldXPos = xPos;
-
-  if (yPos != 0) {
-    yPos -= 480;
-  } else {
-    yPos = oldYPos;
-  }
-  oldYPos = yPos;
+void diagonalBall(){
+  calculateAngle();
+  float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
+  motor.driveToHeadingCorrected(ballAngle, ballAngle + motor.getAdjustedAngle(0.0), min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
 }
 
+void quadraticBall(){
+  float velocityVectorAngle = atan(1.0/getBQuadraticTerm());
+  velocityVectorAngle *= 57.2957795129;
+  if (xPos-30 < 0) {
+    velocityVectorAngle += 180;
+  } else if (yPos < 0) {
+    velocityVectorAngle += 360;
+  }
+  if (velocityVectorAngle < 0) {
+    velocityVectorAngle += 180;
+  }
+  float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
+  motor.driveToHeadingCorrected(velocityVectorAngle, 0.0, min(MAX_SPEED, max(distanceFromBall-10, 0))*speedScalar);
+}
 
-void calculateAngle() {
-  // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
-  if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
-    ballAngle = 2000;
+void fixOutOfBounds() {
+  if (abs(motor.getAdjustedAngle(0.0)) < 5 or turnFixed) {
+    turnFixed = true;
+    
+    float frontSensor = lidars.readSensor1();
+    float backSensor = lidars.readSensor3();
+    float leftSensor = lidars.readSensor2() + 6.0;
+    float rightSensor = lidars.readSensor4() + 6.0;
+
+    float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
+
+    if (leftSensor != 5 and rightSensor != 5 and backSensor != -1 and frontSensor != -1) {
+      if (frontSensor <= minReading and frontSensor < 25) {
+        motor.driveToHeadingCorrected(-180, 0, MAX_SPEED);
+      } else if (backSensor <= minReading and backSensor < 25) {
+        motor.driveToHeadingCorrected(0, 0, MAX_SPEED);
+      } else if (rightSensor <= minReading and rightSensor < 25) {
+        motor.driveToHeadingCorrected(270, 0, MAX_SPEED);
+      } else if (leftSensor <= minReading and leftSensor < 25) {
+        motor.driveToHeadingCorrected(90, 0, MAX_SPEED);
+      } else {
+        motor.stopMotors();
+        interrupted = false;
+        turnFixed = false;
+      }
+      Serial.print("front: ");
+      Serial.println(frontSensor);
+      Serial.print("right: ");
+      Serial.println(rightSensor);
+      Serial.print("back: ");
+      Serial.println(backSensor);
+      Serial.print("left: ");
+      Serial.println(leftSensor);
+    }
   } else {
-    double m = (float)(yPos) / (float)(xPos);
-    ballAngle = atan((double)m);
-    ballAngle *= 57.2957795129;
-    if (xPos < 0) {
-      ballAngle += 180;
-    } else if (yPos < 0) {
-      ballAngle += 360;
-    }
-
-    if (m == .75) {
-      ballAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
-    }
+    motor.turnToHeadingGyro(0.0, MAX_SPEED);
   }
 }
