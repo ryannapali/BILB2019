@@ -4,7 +4,7 @@
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
 
-#define MAX_SPEED 180
+#define MAX_SPEED 100
 #define INTERRUPT_PIN 39
 #define IR_FRONT 20
 #define DODGE_RADIUS 8
@@ -33,17 +33,17 @@ void interrupt() {
 }
 
 bool turnFixed = false;
-float frontIRVoltage = 0.0;
+float frontDistIR = 0.0;
 bool isExecutingDodge = false;
 float dodgeStartTime = 0.0;
 void loop() {  
-  if (interrupted) {
-    fixOutOfBounds();
-    return;
-  }
-  frontIRVoltage = analogRead(IR_FRONT);
-
-  if (frontIRVoltage >= 1.25 and isExecutingDodge == false) {
+//  if (interrupted) {
+//    fixOutOfBounds();
+//    return;
+//  }
+  frontDistIR = analogRead(IR_FRONT);
+  //Serial.println(frontDistIR);
+  if (frontDistIR >= 500 and isExecutingDodge == false) {
     isExecutingDodge = true;
     dodgeStartTime = millis();
   }
@@ -54,9 +54,11 @@ void loop() {
     if (abs(motor.getAdjustedAngle(0.0)) > 5) {
       motor.turnToHeadingGyro(0.0, MAX_SPEED);
     } else {
+      Serial.println("driving");
       motor.driveToHeadingCorrected(0.0, 0.0, MAX_SPEED);
     }
   }
+  motor.dribble();
 }
 
 void fixOutOfBounds() {
@@ -100,6 +102,7 @@ void fixOutOfBounds() {
 
 void executeDodge(){
      // Dodging left? Probably need to do some turning w/out moving first
+    Serial.println("dodging");
     float fractionComplete = (millis()-dodgeStartTime)/TOTAL_DODGE_TIME;
     motor.driveToHeadingCorrected(90.0, (1-fractionComplete)*180.0/180.0, MAX_SPEED);
     if (fractionComplete >= 1) {
