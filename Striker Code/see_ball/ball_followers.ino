@@ -41,19 +41,17 @@ void loop() {
     fixOutOfBounds();
     return;
   }
-
   motor.dribble();
-
   getCameraReadings();
   calculateAngle();
-
   if (xPos == 0 or yPos == 0) {
     motor.stopMotors();
     return;
   }
 
 //  quadraticBall();
-  diagonalBall();
+//  diagonalBall();
+//  zigBall();
 }
 
 void zigBall(){

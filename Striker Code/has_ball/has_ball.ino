@@ -41,7 +41,6 @@ void loop() {
     fixOutOfBounds();
     return;
   }
-  
   frontIRVoltage = analogRead(IR_FRONT);
 
   if (frontIRVoltage >= 1.25 and isExecutingDodge == false) {
@@ -50,12 +49,7 @@ void loop() {
   }
 
   if (isExecutingDodge) {
-    // Dodging left? Probably need to do some turning w/out moving first
-    float fractionComplete = (millis()-dodgeStartTime)/TOTAL_DODGE_TIME;
-    motor.driveToHeadingCorrected(90.0, (1-fractionComplete)*180.0/180.0, MAX_SPEED);
-    if (fractionComplete >= 1) {
-      isExecutingDodge = false;
-    }
+   executeDodge();
   } else {
     if (abs(motor.getAdjustedAngle(0.0)) > 5) {
       motor.turnToHeadingGyro(0.0, MAX_SPEED);
@@ -63,9 +57,6 @@ void loop() {
       motor.driveToHeadingCorrected(0.0, 0.0, MAX_SPEED);
     }
   }
-
-  motor.dribble();
-
 }
 
 void fixOutOfBounds() {
@@ -106,3 +97,13 @@ void fixOutOfBounds() {
     motor.turnToHeadingGyro(0.0, MAX_SPEED);
   }
 }
+
+void executeDodge(){
+     // Dodging left? Probably need to do some turning w/out moving first
+    float fractionComplete = (millis()-dodgeStartTime)/TOTAL_DODGE_TIME;
+    motor.driveToHeadingCorrected(90.0, (1-fractionComplete)*180.0/180.0, MAX_SPEED);
+    if (fractionComplete >= 1) {
+      isExecutingDodge = false;
+    }
+}
+

@@ -1,4 +1,3 @@
-
 float getBQuadraticTerm() {
   // Coordinates flipped because stupid
   // such goofs avert your eyes
