@@ -2,7 +2,6 @@
 #define MOTORS_H
 
 #include "Arduino.h"
-#include "Adafruit_VL6180X.h"
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
@@ -11,6 +10,8 @@ class Motors {
 public:
     Motors();
     ~Motors();
+    
+    void imuInit();
     
     void setM1Speed(int speed);
     void setM2Speed(int speed);
@@ -35,7 +36,7 @@ public:
     
     void stopMotors();
     
-    void dribble();
+    void dribble(float power);
     
     void driveToHeading(float angle, float speed);
     
@@ -47,6 +48,7 @@ public:
 private:
     void MotorsInit();
     void buttonInit();
+    
     bool checkMotorSwitchOn();
     
     Adafruit_BNO055 bno;

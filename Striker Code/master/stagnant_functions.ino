@@ -1,7 +1,7 @@
 float getBQuadraticTerm() {
   // Coordinates flipped because stupid
   // such goofs avert your eyes
-  float backXPos = xPos - 30.0;
+  float backXPos = xPos;
 //  if (backXPos < k and abs(yPos) > 10) {
 //    return (2.0*(backXPos-k)*(yPos + (abs(yPos)/yPos)*sqrt((k*yPos*yPos)/(k-backXPos))))/(yPos*yPos);
 //  } else {
@@ -54,10 +54,11 @@ void getCameraReadings() {
   yPos = word(highChar2, lowChar2);
   tPos = word(highChar3, lowChar3);
   oPos = word(highChar4, lowChar4);
+  
   if (xPos != 0) {
     xPos -= 640;
     xPos *= -1;
-    xPos += 35;
+    xPos += 40;
   } else {
 //    xPos = oldXPos;
   }
@@ -69,6 +70,18 @@ void getCameraReadings() {
 //    yPos = oldYPos;
   }
   oldYPos = yPos;
+
+  if (tPos != 0) {
+    tPos -= 640;
+    tPos *= -1;
+  }
+  if (oPos != 0) {
+    oPos -= 480;
+  } 
+//  Serial.print("o pos: ");
+//  Serial.println(oPos);
+//  Serial.print("t pos: ");
+//  Serial.println(tPos);
 }
 
 
@@ -88,6 +101,23 @@ void calculateAngle() {
 
     if (m == .75) {
       ballAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
+    }
+  }
+
+  if (tPos > 1280 || oPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
+    goalAngle = 2000;
+  } else {
+    double m = (float)(oPos) / (float)(tPos);
+    goalAngle = atan((double)m);
+    goalAngle *= 57.2957795129;
+    if (tPos < 0) {
+      goalAngle += 180;
+    } else if (oPos < 0) {
+      goalAngle += 360;
+    }
+
+    if (m == .75) {
+      goalAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
     }
   }
 }

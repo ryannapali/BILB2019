@@ -1,5 +1,7 @@
 #include <Wire.h>
 
+#include <Adafruit_BNO055.h>
+
 uint16_t distance = 0; //distance
 uint16_t strength = 0; // signal strength
 uint8_t rangeType = 0; //range scale
@@ -25,6 +27,7 @@ int g2 = 10;
 int b2 = 14;
 int wr = 17;
 int wl = 28;
+Adafruit_BNO055 bno;
 
 void setup()
 {
@@ -41,6 +44,15 @@ void setup()
   Serial.begin(9600);
   delay(150);
   Serial.println("TFMini I2C Test");
+
+    bno = Adafruit_BNO055();
+        if(!bno.begin()) {
+        Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
+        while(1);
+    }
+    
+    delay(100);
+    bno.setExtCrystalUse(true);
 }
 
 //Write two bytes to a spot
@@ -99,11 +111,13 @@ boolean readDistance(uint8_t deviceAddress)
 
 void loop()
 {
+//      imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+//    Serial.println(euler.x());
   if (readDistance(sensor1) == true)
   {
     if (valid_data == true) {
-//      Serial.print("sensor 1 ");
-//      Serial.println(distance);
+      Serial.print("sensor 1 ");
+      Serial.println(distance);
       if(distance==65533) analogWrite(wr,255);
       else analogWrite(wr,0);
     }
@@ -119,8 +133,8 @@ void loop()
 if (readDistance(sensor2) == true)
   {
     if (valid_data == true) {
-//      Serial.print("sensor 2 ");
-//      Serial.println(distance);
+      Serial.print("sensor 2 ");
+      Serial.println(distance);
       if(distance==65533) analogWrite(wl,255);
       else analogWrite(wl,0);
     }
@@ -135,8 +149,8 @@ if (readDistance(sensor2) == true)
   if (readDistance(sensor3) == true)
   {
     if (valid_data == true) {
-//      Serial.print("sensor 3 ");
-//      Serial.println(distance);
+      Serial.print("sensor 3 ");
+      Serial.println(distance);
       if(distance==65533) analogWrite(r1,255);
       else analogWrite(r1,0);
     }

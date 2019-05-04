@@ -38,10 +38,18 @@ void Motors::MotorsInit(){
     analogWriteFrequency(4, 58593);
     analogWriteFrequency(29, 58593);
     analogWriteFrequency(30, 58593);
-    
+}
+
+void Motors::buttonInit() {
+    pinMode(26, INPUT_PULLUP);
+    pinMode(25, INPUT_PULLUP);
+    pinMode(12, INPUT_PULLUP);
+}
+
+void Motors::imuInit() {
     bno = Adafruit_BNO055();
     
-    if(!bno.begin()) {
+    if (!bno.begin()) {
         Serial.print("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!");
         while(1);
     }
@@ -49,12 +57,6 @@ void Motors::MotorsInit(){
     delay(100);
     
     bno.setExtCrystalUse(true);
-}
-
-void Motors::buttonInit() {
-    pinMode(26, INPUT_PULLUP);
-    pinMode(25, INPUT_PULLUP);
-    pinMode(12, INPUT_PULLUP);
 }
 
 bool Motors::checkMotorSwitchOn() {
@@ -202,10 +204,10 @@ void Motors::stopMotors() {
     setM4Speed(0);
 }
 
-void Motors::dribble() {
+void Motors::dribble(float power) {
     if (checkMotorSwitchOn() == true) {
         digitalWrite(_DBDIR, HIGH);
-        analogWrite(_DBPWM, 255);
+        analogWrite(_DBPWM, power);
     } else {
         digitalWrite(_DBDIR, LOW);
         analogWrite(_DBPWM, 0);
