@@ -39,6 +39,7 @@ void quadraticBall(){
   if (velocityVectorAngle < 0) {
     velocityVectorAngle += 180;
   }
+  
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
   if (distanceFromBall < 30) {
     motor.dribble(255);

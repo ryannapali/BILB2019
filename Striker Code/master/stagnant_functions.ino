@@ -1,17 +1,14 @@
 float getBQuadraticTerm() {
-  // Coordinates flipped because stupid
-  // such goofs avert your eyes
-  float backXPos = xPos;
 //  if (backXPos < k and abs(yPos) > 10) {
 //    return (2.0*(backXPos-k)*(yPos + (abs(yPos)/yPos)*sqrt((k*yPos*yPos)/(k-backXPos))))/(yPos*yPos);
 //  } else {
 //    // Do sideways quadratic
 //    return 2.0*yPos/backXPos;
 //  }
-  if (backXPos < 0) {
-    return 8*backXPos/yPos;
+  if (xPos < 0) {
+    return 8*xPos/yPos;
   } else {
-    return 0.125*backXPos/yPos;
+    return 0.125*xPos/yPos;
   }
 }
 
@@ -78,14 +75,10 @@ void getCameraReadings() {
   if (oPos != 0) {
     oPos -= 480;
   } 
-//  Serial.print("o pos: ");
-//  Serial.println(oPos);
-//  Serial.print("t pos: ");
-//  Serial.println(tPos);
 }
 
 
-void calculateAngle() {
+void calculateAngles() {
   // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
   if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
     ballAngle = 2000;
@@ -100,7 +93,7 @@ void calculateAngle() {
     }
 
     if (m == .75) {
-      ballAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
+      ballAngle = 2000; //ballAngle = 10000 when robot doesn't see ball
     }
   }
 
@@ -117,7 +110,7 @@ void calculateAngle() {
     }
 
     if (m == .75) {
-      goalAngle = 10000; //ballAngle = 10000 when robot doesn't see ball
+      goalAngle = 2000; //ballAngle = 10000 when robot doesn't see ball
     }
   }
 }

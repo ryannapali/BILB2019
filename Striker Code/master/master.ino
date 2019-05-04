@@ -34,7 +34,6 @@ bool interrupted = false;
 bool turnFixed = false;
 
 void setup() {
-  // put your setup code here, to run once:
   Serial5.begin(19200);
   Serial.begin(115200);
   pinMode(INTERRUPT_PIN, INPUT);
@@ -43,7 +42,7 @@ void setup() {
 
   motor.imuInit();
   if (! vl.begin()) {
-    Serial.println("Failed to find sensor");
+    Serial.println("Failed to find TOF sensor");
     while (1);
   }
 }
@@ -55,7 +54,7 @@ void loop() {
   }
   
   getCameraReadings();
-  calculateAngle();
+  calculateAngles();
   
   ballRanges[2] = ballRanges[1];
   ballRanges[1] = ballRanges[0];
@@ -68,7 +67,7 @@ void loop() {
   
   if (ballRanges[0] < 50 and ballRanges[1] < 50 and ballRanges[2] < 50) {
     state = has_ball;
-  } else if (xPos < 1280 and yPos < 960 and yPos != 0 and yPos != 0) {
+  } else if (ballAngle != 2000 and yPos != 0 and yPos != 0) {
     state = sees_ball;
   } else {
     state = invisible_ball;
@@ -76,6 +75,7 @@ void loop() {
   
   switch (state) {
     case invisible_ball: 
+      // Do something smarter here later
       motor.stopMotors();
       motor.dribble(255);
       break;
