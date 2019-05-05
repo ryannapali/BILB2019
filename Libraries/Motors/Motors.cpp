@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include "Motors.h"
+#include <MiniPID.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
@@ -251,9 +252,9 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
     
     float rad = getRad(adjustedAngle);
     float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
-    adjustedAngle = getAdjustedAngle(targetOrientation);
+    float relativeAngle = getRelativeAngle(targetOrientation);
     
-    int power = (200000.0/speed)*adjustedAngle/360.0;
+    int power = (200000.0/speed)*relativeAngle/360.0;
     
     if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
         power = 0;
@@ -269,15 +270,23 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
 }
 
 
-void Motors::turnToHeadingGyro(float targetAngle, float maxSpeed) {
-    float adjustedAngle = getAdjustedAngle(targetAngle);
+void Motors::turnToAbsoluteHeading(float targetAngle, float maxSpeed) {
+    float relativeAngle = getRelativeAngle(targetAngle);
     
-    if (abs(adjustedAngle) < DEAD_ANGLE_ZONE) {
+    turnToRelativeHeading(-relativeAngle, maxSpeed);
+}
+
+void Motors::turnToRelativeHeading(float targetAngle, float maxSpeed) {
+    if (targetAngle >= 180) {
+        targetAngle -= 360;
+    }
+    
+    if (abs(targetAngle) < DEAD_ANGLE_ZONE) {
         return;
     }
     
     /* Calculate required turning power */
-    int power = 1000.0*adjustedAngle/360.0;
+    int power = -1000.0*targetAngle/360.0;
     
     if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
         power = 0;
@@ -289,17 +298,18 @@ void Motors::turnToHeadingGyro(float targetAngle, float maxSpeed) {
     spin(power);
 }
 
-float Motors::getAdjustedAngle(float targetAngle) {
+
+float Motors::getRelativeAngle(float targetAngle) {
     imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
     float currentAngle = euler.x();
     
-    float adjustedAngle = currentAngle - targetAngle;
-    if (adjustedAngle < 0) {
-        adjustedAngle += 360;
+    float relativeAngle = currentAngle - targetAngle;
+    if (relativeAngle < 0) {
+        relativeAngle += 360;
     }
-    if (adjustedAngle >= 180) {
-        adjustedAngle -= 360;
+    if (relativeAngle >= 180) {
+        relativeAngle -= 360;
     }
     
-    return adjustedAngle;
+    return relativeAngle;
 }

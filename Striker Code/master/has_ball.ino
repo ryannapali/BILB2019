@@ -22,11 +22,7 @@ void turnShoot() {
   }
 
   if (abs(goalAngle) > 5.0) {
-    int power = -700.0*goalAngle/360.0;
-    power = min(power, MAX_SPEED);
-    power = max(power, -MAX_SPEED);
-    
-    motor.spin(power);
+    motor.turnToRelativeHeading(goalAngle, MAX_SPEED);
   } else {
     digitalWrite(SOLENOID_PIN, HIGH);
     delay(100);

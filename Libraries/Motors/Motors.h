@@ -2,6 +2,7 @@
 #define MOTORS_H
 
 #include "Arduino.h"
+#include <MiniPID.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
@@ -42,9 +43,11 @@ public:
     
     void driveToHeadingCorrected(float angle, float targetOrientation, float speed);
     
-    void turnToHeadingGyro(float targetAngle, float maxSpeed);
+    void turnToAbsoluteHeading(float targetAngle, float maxSpeed);
     
-    float getAdjustedAngle(float targetAngle);
+    void turnToRelativeHeading(float targetAngle, float maxSpeed);
+    
+    float getRelativeAngle(float targetAngle);
 private:
     void MotorsInit();
     void buttonInit();

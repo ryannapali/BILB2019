@@ -86,10 +86,12 @@ void loop() {
       turnShoot();
       break;
   }
+
+  delay(10);
 }
 
 void fixOutOfBounds() {
-  if (abs(motor.getAdjustedAngle(0.0)) < 5 or turnFixed) {
+  if (abs(motor.getRelativeAngle(0.0)) < 5 or turnFixed) {
     turnFixed = true;
     
     frontSensor = lidars.readSensor1();
@@ -123,7 +125,7 @@ void fixOutOfBounds() {
       Serial.println(leftSensor);
     }
   } else {
-    motor.turnToHeadingGyro(0.0, MAX_SPEED);
+    motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
   }
 }
 

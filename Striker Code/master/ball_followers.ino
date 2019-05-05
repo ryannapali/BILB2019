@@ -23,9 +23,9 @@ void zigBall(){
 }
 
 void diagonalBall(){
-  calculateAngle();
+  calculateAngles();
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-  motor.driveToHeadingCorrected(ballAngle, ballAngle + motor.getAdjustedAngle(0.0), min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
+  motor.driveToHeadingCorrected(ballAngle, ballAngle + motor.getRelativeAngle(0.0), min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
 }
 
 void quadraticBall(){
