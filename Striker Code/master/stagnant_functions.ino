@@ -6,9 +6,9 @@ float getBQuadraticTerm() {
 //    return 2.0*yPos/backXPos;
 //  }
   if (xPos < 0) {
-    return 8*xPos/yPos;
+    return 1.0*xPos/yPos;
   } else {
-    return 0.125*xPos/yPos;
+    return 1.0*xPos/yPos;
   }
 }
 
@@ -55,7 +55,6 @@ void getCameraReadings() {
   if (xPos != 0) {
     xPos -= 640;
     xPos *= -1;
-    xPos += 40;
   } else {
 //    xPos = oldXPos;
   }
@@ -75,6 +74,13 @@ void getCameraReadings() {
   if (oPos != 0) {
     oPos -= 480;
   } 
+
+
+  xPos += -10.0;
+  if (xPos < 0) {
+    xPos += -10.0;
+  }
+//  yPos += 5.0;
 }
 
 
@@ -112,5 +118,9 @@ void calculateAngles() {
     if (m == .75) {
       goalAngle = 2000; //ballAngle = 10000 when robot doesn't see ball
     }
+  }
+
+  if (goalAngle >= 180) {
+    goalAngle -= 360;
   }
 }

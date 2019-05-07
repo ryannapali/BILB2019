@@ -15,19 +15,39 @@ float frontDistIR = 0.0;
 bool isExecutingDodge = false;
 float dodgeStartTime = 0.0;
 
+bool turningToShoot = false;
 
 void turnShoot() {
-  if (goalAngle >= 180) {
-    goalAngle -= 360;
-  }
-
-  if (abs(goalAngle) > 5.0) {
-    motor.turnToRelativeHeading(goalAngle, MAX_SPEED);
+  if (abs(goalAngle) > 3.0) {
+    motor.turnToRelativeHeading(goalAngle, 100);
   } else {
+    motor.stopMotors();
+    delay(500);
     digitalWrite(SOLENOID_PIN, HIGH);
     delay(100);
     digitalWrite(SOLENOID_PIN, LOW);
     delay(1500);
+    turningToShoot = false;
+  }
+}
+
+void goBackwardsToShoot() {
+  if (abs(motor.getRelativeAngle(180.0)) > 5.0 and turningToShoot == false) {
+    motor.turnToAbsoluteHeading(180.0, 100);
+  } else {
+    if (tPos != 0) {
+      if (tPos < -350) {
+        motor.driveToHeadingCorrected(goalAngle, 180.0, 180);
+      } else {
+        turnShoot();
+        turningToShoot = true;
+      }
+    } else {
+      backSensor = lidars.readSensor3();
+      if (backSensor > 20) {
+        motor.driveToHeadingCorrected(180.0, 180.0, 180);
+      }
+    }
   }
 }
 

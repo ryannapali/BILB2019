@@ -6,7 +6,7 @@ Adafruit_VL6180X vl = Adafruit_VL6180X();
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
 
-#define MAX_SPEED 140
+#define MAX_SPEED 220
 #define INTERRUPT_PIN 39
 
 #define SOLENOID_PIN 27
@@ -40,6 +40,10 @@ void setup() {
   pinMode(SOLENOID_PIN, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
 
+  // red led
+  pinMode(21, OUTPUT);
+  analogWrite(21, 255);
+
   motor.imuInit();
   if (! vl.begin()) {
     Serial.println("Failed to find TOF sensor");
@@ -52,10 +56,11 @@ void loop() {
     fixOutOfBounds();
     return;
   }
-  
+
   getCameraReadings();
   calculateAngles();
-  
+  Serial.println(tPos);
+  Serial.println(goalAngle);
   ballRanges[2] = ballRanges[1];
   ballRanges[1] = ballRanges[0];
   ballRanges[0] = vl.readRange();
@@ -65,7 +70,7 @@ void loop() {
     return;
   }
   
-  if (ballRanges[0] < 50 and ballRanges[1] < 50 and ballRanges[2] < 50) {
+  if (ballRanges[0] < 60 and ballRanges[1] < 60 and ballRanges[2] < 60) {
     state = has_ball;
   } else if (ballAngle != 2000 and yPos != 0 and yPos != 0) {
     state = sees_ball;
@@ -83,11 +88,9 @@ void loop() {
       quadraticBall();
       break;
     case has_ball:
-      turnShoot();
+      goBackwardsToShoot();
       break;
   }
-
-  delay(10);
 }
 
 void fixOutOfBounds() {

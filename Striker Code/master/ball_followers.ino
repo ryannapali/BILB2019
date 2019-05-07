@@ -25,26 +25,38 @@ void zigBall(){
 void diagonalBall(){
   calculateAngles();
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-  motor.driveToHeadingCorrected(ballAngle, ballAngle + motor.getRelativeAngle(0.0), min(MAX_SPEED, max(distanceFromBall-20, 0))*speedScalar);
+  motor.driveToHeadingCorrected(ballAngle, ballAngle, min(MAX_SPEED, max(distanceFromBall-10, 80))*speedScalar);
 }
 
+float lastAngle = 0.0;
 void quadraticBall(){
-  float velocityVectorAngle = atan(1.0/getBQuadraticTerm());
+  float velocityVectorAngle = atan(getBQuadraticTerm());
   velocityVectorAngle *= 57.2957795129;
-  if (xPos < 0) {
-    velocityVectorAngle += 180;
-  } else if (yPos < 0) {
-    velocityVectorAngle += 360;
-  }
-  if (velocityVectorAngle < 0) {
-    velocityVectorAngle += 180;
+  if (yPos < 0) {
+    velocityVectorAngle = -90.0 - velocityVectorAngle;
+  } else {
+    velocityVectorAngle = 90.0 - velocityVectorAngle;
   }
   
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-  if (distanceFromBall < 30) {
+  if (xPos < 20 and xPos > -150 and abs(yPos) < 25) {
+    // Turn on red LED
+    analogWrite(21, 0);
+    Serial.println("charging");
     motor.dribble(255);
-  } else {
+    motor.driveToHeadingCorrected(0.0, 0.0, MAX_SPEED/2);
+    return;
+  } else {    
+    // Turn off red LED
+    analogWrite(21, 255);
     motor.dribble(0);
   }
-  motor.driveToHeadingCorrected(velocityVectorAngle, 0.0, min(MAX_SPEED, max(distanceFromBall-10, 0))*speedScalar);
+
+//  Serial.println(velocityVectorAngle);
+//  Serial.println(getBQuadraticTerm());
+//  Serial.print(xPos);
+//  Serial.print(" ");
+//  Serial.println(yPos);
+  motor.driveToHeadingCorrected(velocityVectorAngle, 0.0, min(MAX_SPEED, max(distanceFromBall-10, 80))*speedScalar);
+  lastAngle = velocityVectorAngle;
 }
