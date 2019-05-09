@@ -22,8 +22,6 @@ float xPos = 1;
 float yPos = 1;
 float tPos = 1;
 float oPos = 1;
-float oldXPos = 1;
-float oldYPos = 1;
 
 float frontSensor;
 float backSensor;
@@ -52,32 +50,32 @@ void setup() {
 }
 
 void loop() {
-  if (interrupted) {
-    fixOutOfBounds();
-    return;
-  }
-
+//  if (interrupted) {
+//    fixOutOfBounds();
+//    return;
+//  }
+  
   getCameraReadings();
   calculateAngles();
-  Serial.println(tPos);
-  Serial.println(goalAngle);
-  ballRanges[2] = ballRanges[1];
-  ballRanges[1] = ballRanges[0];
-  ballRanges[0] = vl.readRange();
 
-  uint8_t status = vl.readRangeStatus();
-  if (status != VL6180X_ERROR_NONE) {
-    return;
-  }
-  
+// Get ball TOF sensor readings:
+//  ballRanges[2] = ballRanges[1];
+//  ballRanges[1] = ballRanges[0];
+//  ballRanges[0] = vl.readRange();
+//
+//  uint8_t status = vl.readRangeStatus();
+//  if (status != VL6180X_ERROR_NONE) {
+//    return;
+//  }
+
   if (ballRanges[0] < 60 and ballRanges[1] < 60 and ballRanges[2] < 60) {
     state = has_ball;
-  } else if (ballAngle != 2000 and yPos != 0 and yPos != 0) {
+  } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
   } else {
     state = invisible_ball;
   }
-  
+ 
   switch (state) {
     case invisible_ball: 
       // Do something smarter here later
@@ -88,7 +86,9 @@ void loop() {
       quadraticBall();
       break;
     case has_ball:
-      goBackwardsToShoot();
+      motor.dribble(0);
+      motor.stopMotors();
+//      turnShoot();
       break;
   }
 }

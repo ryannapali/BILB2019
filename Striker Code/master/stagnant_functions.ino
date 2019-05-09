@@ -1,14 +1,8 @@
 float getBQuadraticTerm() {
-//  if (backXPos < k and abs(yPos) > 10) {
-//    return (2.0*(backXPos-k)*(yPos + (abs(yPos)/yPos)*sqrt((k*yPos*yPos)/(k-backXPos))))/(yPos*yPos);
-//  } else {
-//    // Do sideways quadratic
-//    return 2.0*yPos/backXPos;
-//  }
   if (xPos < 0) {
-    return 1.0*xPos/yPos;
+    return 2.0*(xPos-70.0)/yPos;
   } else {
-    return 1.0*xPos/yPos;
+    return 0.5*(xPos-70.0)/yPos;
   }
 }
 
@@ -55,17 +49,13 @@ void getCameraReadings() {
   if (xPos != 0) {
     xPos -= 640;
     xPos *= -1;
-  } else {
-//    xPos = oldXPos;
+    xPos -= 100.0;
   }
-  oldXPos = xPos;
 
   if (yPos != 0) {
     yPos -= 480;
-  } else {
-//    yPos = oldYPos;
+    yPos -= 35.0;
   }
-  oldYPos = yPos;
 
   if (tPos != 0) {
     tPos -= 640;
@@ -74,13 +64,6 @@ void getCameraReadings() {
   if (oPos != 0) {
     oPos -= 480;
   } 
-
-
-  xPos += -10.0;
-  if (xPos < 0) {
-    xPos += -10.0;
-  }
-//  yPos += 5.0;
 }
 
 
@@ -99,7 +82,7 @@ void calculateAngles() {
     }
 
     if (m == .75) {
-      ballAngle = 2000; //ballAngle = 10000 when robot doesn't see ball
+      ballAngle = 2000; //ballAngle = 2000 when robot doesn't see ball
     }
   }
 
@@ -116,7 +99,7 @@ void calculateAngles() {
     }
 
     if (m == .75) {
-      goalAngle = 2000; //ballAngle = 10000 when robot doesn't see ball
+      goalAngle = 2000; //goalAngle = 2000 when robot doesn't see ball
     }
   }
 

@@ -250,23 +250,22 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
     }
     adjustedAngle = 360 - adjustedAngle;
     
-    float rad = getRad(adjustedAngle);
-    float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
     float relativeAngle = getRelativeAngle(targetOrientation);
+    float turningPower = 2.5*relativeAngle/180.0;
     
-    int power = (200000.0/speed)*relativeAngle/360.0;
+    float rad = getRad(adjustedAngle);
+    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.28834763) + turningPower,
+        sin(-rad + 0.994837674) + turningPower, sin(-rad + 2.35619449) + turningPower};
     
-    if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
-        power = 0;
-    }
+    float maxPower = max(max(abs(proportionals[0]), abs(proportionals[1])), max(abs(proportionals[2]), abs(proportionals[3])));
     
-    power = min(power, speed);
-    power = max(power, -speed);
+    float normalizedProportionals[] = {proportionals[0] / maxPower, proportionals[1] / maxPower,
+        proportionals[2] / maxPower, proportionals[3] / maxPower};
     
-    setM1Speed(-speed * proportionals[0] - power);
-    setM2Speed(-speed * proportionals[1] - power);
-    setM3Speed(-speed * proportionals[2] - power);
-    setM4Speed(-speed * proportionals[3] - power);
+    setM1Speed(-speed * normalizedProportionals[0]);
+    setM2Speed(-speed * normalizedProportionals[1]);
+    setM3Speed(-speed * normalizedProportionals[2]);
+    setM4Speed(-speed * normalizedProportionals[3]);
 }
 
 
@@ -278,24 +277,14 @@ void Motors::turnToAbsoluteHeading(float targetAngle, float maxSpeed) {
 
 void Motors::turnToRelativeHeading(float targetAngle, float maxSpeed) {
     if (targetAngle >= 180) {
-        targetAngle -= 360;
-    }
-    
-    if (abs(targetAngle) < DEAD_ANGLE_ZONE) {
-        return;
+        targetAngle -= 360.0;
     }
     
     /* Calculate required turning power */
-    int power = -1000.0*targetAngle/360.0;
+    float power = min(abs(2.5*targetAngle/180.0), 1.0);
+    if (targetAngle < 0) power*= -1.0;
     
-    if (power < DEAD_POWER_ZONE and power > -DEAD_POWER_ZONE) {
-        power = 0;
-    }
-    
-    power = min(power, maxSpeed);
-    power = max(power, -maxSpeed);
-    
-    spin(power);
+    spin(-maxSpeed * power);
 }
 
 
@@ -305,10 +294,10 @@ float Motors::getRelativeAngle(float targetAngle) {
     
     float relativeAngle = currentAngle - targetAngle;
     if (relativeAngle < 0) {
-        relativeAngle += 360;
+        relativeAngle += 360.0;
     }
     if (relativeAngle >= 180) {
-        relativeAngle -= 360;
+        relativeAngle -= 360.0;
     }
     
     return relativeAngle;

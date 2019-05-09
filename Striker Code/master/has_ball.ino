@@ -22,7 +22,7 @@ void turnShoot() {
     motor.turnToRelativeHeading(goalAngle, 100);
   } else {
     motor.stopMotors();
-    delay(500);
+    delay(300);
     digitalWrite(SOLENOID_PIN, HIGH);
     delay(100);
     digitalWrite(SOLENOID_PIN, LOW);
