@@ -6,6 +6,17 @@ float getBQuadraticTerm() {
   }
 }
 
+// MAKE SURE SLOPE WAS CALCULATED USING EXACTLY YPOS
+float angleFromSlope(float slope) {
+  float angle = atan(slope);
+  angle *= 57.2957795129;
+  if (yPos < 0) {
+    angle = -90.0 - angle;
+  } else {
+    angle = 90.0 - angle;
+  }
+}
+
 void clearCameraBuffer() {
   Serial5.clear();
 }

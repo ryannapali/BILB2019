@@ -9,20 +9,16 @@ float lastTime = 0.0;
 
 float lastAngle = 0.0;
 void quadraticBall(){
-  float velocityVectorAngle = atan(getBQuadraticTerm());
-  velocityVectorAngle *= 57.2957795129;
-  if (yPos < 0) {
-    velocityVectorAngle = -90.0 - velocityVectorAngle;
-  } else {
-    velocityVectorAngle = 90.0 - velocityVectorAngle;
-  }
+  float velocityVectorAngle = angleFromSlope(getBQuadraticTerm());
   
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-  if (xPos < 100 and xPos > 0 and abs(yPos) < 35) {
+  if (abs(xPos) < 200 and abs(yPos) > abs(3.0*xPos)) {
     // Turn on red LED
     analogWrite(21, 0);
     motor.dribble(255);
-    motor.driveToHeadingCorrected(0.0, 0.0, MAX_SPEED/2);
+
+    float directToBallHeading = angleFromSlope(xPos/yPos);
+    motor.driveToHeadingCorrected(directToBallHeading, motor.getRelativeAngle(0.0) + directToBallHeading, MAX_SPEED);
     return;
   } else {
     // Turn off red LED
