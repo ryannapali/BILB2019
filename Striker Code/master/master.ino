@@ -36,6 +36,7 @@ void setup() {
   Serial.begin(115200);
   pinMode(INTERRUPT_PIN, INPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
 
   // red led
@@ -57,6 +58,7 @@ void loop() {
   
   getCameraReadings();
   calculateAngles();
+  checkFieldReorient();
 
 // Get ball TOF sensor readings:
 //  ballRanges[2] = ballRanges[1];

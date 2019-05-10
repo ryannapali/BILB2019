@@ -4,7 +4,7 @@
 // Inches per second
 #define SPEED_ESTIMATE 30
 #define SOLENOID_PIN 27
-
+#define BUTTON_PIN 12
 #define TOTAL_DODGE_TIME DODGE_RADIUS*PI/SPEED_ESTIMATE
 
 bool hasClearShot = false; 

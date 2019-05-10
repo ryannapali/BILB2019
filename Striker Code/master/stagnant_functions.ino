@@ -17,6 +17,12 @@ float angleFromSlope(float slope) {
   }
 }
 
+void checkFieldReorient() {
+  if(digialRead(BUTTON_PIN) == LOW){
+    motor.resetGyro();
+  }
+}
+
 void clearCameraBuffer() {
   Serial5.clear();
 }
