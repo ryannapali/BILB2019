@@ -237,6 +237,37 @@ void Motors::driveToHeading(float angle, float speed) {
     setM4Speed(-speed * proportionals[3]);
 }
 
+void Motors::driveToRelativeHeadingCorrected(float angle, float targetOrientation, float speed) {
+    float adjustedAngle = angle - 180;
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    if (adjustedAngle >= 180) {
+        adjustedAngle -= 360;
+    }
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    adjustedAngle = 360 - adjustedAngle;
+    
+    float relativeAngle = targetOrientation;
+    float turningPower = 2.5*relativeAngle/180.0;
+    
+    float rad = getRad(adjustedAngle);
+    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.28834763) + turningPower,
+        sin(-rad + 0.994837674) + turningPower, sin(-rad + 2.35619449) + turningPower};
+    
+    float maxPower = max(max(abs(proportionals[0]), abs(proportionals[1])), max(abs(proportionals[2]), abs(proportionals[3])));
+    
+    float normalizedProportionals[] = {proportionals[0] / maxPower, proportionals[1] / maxPower,
+        proportionals[2] / maxPower, proportionals[3] / maxPower};
+    
+    setM1Speed(-speed * normalizedProportionals[0]);
+    setM2Speed(-speed * normalizedProportionals[1]);
+    setM3Speed(-speed * normalizedProportionals[2]);
+    setM4Speed(-speed * normalizedProportionals[3]);
+}
+
 void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float speed) {
     float adjustedAngle = angle - 180;
     if (adjustedAngle < 0) {
@@ -301,4 +332,8 @@ float Motors::getRelativeAngle(float targetAngle) {
     }
     
     return relativeAngle;
+}
+
+void Motors::resetGyro() {
+    
 }

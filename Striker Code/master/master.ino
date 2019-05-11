@@ -2,14 +2,14 @@
 #include "Motors.h"
 #include "LIDARS.h"
 
+#define MAX_SPEED 150
+#define INTERRUPT_PIN 39
+#define SOLENOID_PIN 27
+#define BUTTON_PIN 12
+
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
-
-#define MAX_SPEED 220
-#define INTERRUPT_PIN 39
-
-#define SOLENOID_PIN 27
 
 float ballAngle;
 float goalAngle;
@@ -20,6 +20,9 @@ State state = invisible_ball;
 
 float xPos = 1;
 float yPos = 1;
+float oldXPos = 0.0;
+int failedReadingCount = 0;
+float oldYPos = 0.0;
 float tPos = 1;
 float oPos = 1;
 
@@ -41,7 +44,9 @@ void setup() {
 
   // red led
   pinMode(21, OUTPUT);
+  pinMode(22, OUTPUT);
   analogWrite(21, 255);
+  analogWrite(22, 255);
 
   motor.imuInit();
   if (! vl.begin()) {
@@ -88,7 +93,6 @@ void loop() {
       quadraticBall();
       break;
     case has_ball:
-      motor.dribble(0);
       motor.stopMotors();
 //      turnShoot();
       break;

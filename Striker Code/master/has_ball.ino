@@ -4,7 +4,7 @@
 // Inches per second
 #define SPEED_ESTIMATE 30
 #define SOLENOID_PIN 27
-#define BUTTON_PIN 12
+
 #define TOTAL_DODGE_TIME DODGE_RADIUS*PI/SPEED_ESTIMATE
 
 bool hasClearShot = false; 
@@ -19,7 +19,7 @@ bool turningToShoot = false;
 
 void turnShoot() {
   if (abs(goalAngle) > 3.0) {
-    motor.turnToRelativeHeading(goalAngle, 100);
+    motor.turnToRelativeHeading(goalAngle, MAX_SPEED);
   } else {
     motor.stopMotors();
     delay(300);

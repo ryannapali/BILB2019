@@ -43,11 +43,15 @@ public:
     
     void driveToHeadingCorrected(float angle, float targetOrientation, float speed);
     
+    void driveToRelativeHeadingCorrected(float angle, float targetOrientation, float speed);
+    
     void turnToAbsoluteHeading(float targetAngle, float maxSpeed);
     
     void turnToRelativeHeading(float targetAngle, float maxSpeed);
     
     float getRelativeAngle(float targetAngle);
+    
+    void resetGyro();
 private:
     void MotorsInit();
     void buttonInit();
