@@ -2,10 +2,13 @@
 #include "Motors.h"
 #include "LIDARS.h"
 
-#define MAX_SPEED 150
+#define MAX_SPEED 180.0
 #define INTERRUPT_PIN 39
 #define SOLENOID_PIN 27
 #define BUTTON_PIN 12
+#define FIELD_WIDTH 78
+#define FIELD_LENGTH 105
+
 
 Adafruit_VL6180X vl = Adafruit_VL6180X();
 Motors motor = Motors();
@@ -13,7 +16,7 @@ LIDARS lidars = LIDARS();
 
 float ballAngle;
 float goalAngle;
-int ballRanges [3] = {100, 100, 100};
+int ballRanges [5] = {100, 100, 100, 100, 100};
 
 enum State { has_ball, sees_ball, invisible_ball };
 State state = invisible_ball;
@@ -21,10 +24,13 @@ State state = invisible_ball;
 float xPos = 1;
 float yPos = 1;
 float oldXPos = 0.0;
-int failedReadingCount = 0;
 float oldYPos = 0.0;
+int failedBallReadingCount = 0;
 float tPos = 1;
 float oPos = 1;
+float oldTPos = 0.0;
+float oldOPos = 0.0;
+int failedGoalReadingCount = 0;
 
 float frontSensor;
 float backSensor;
@@ -60,40 +66,47 @@ void loop() {
 //    fixOutOfBounds();
 //    return;
 //  }
-  
   getCameraReadings();
   calculateAngles();
   checkFieldReorient();
 
 // Get ball TOF sensor readings:
-//  ballRanges[2] = ballRanges[1];
-//  ballRanges[1] = ballRanges[0];
+  ballRanges[4] = ballRanges[3];
+  ballRanges[3] = ballRanges[2];
+  ballRanges[2] = ballRanges[1];
+  ballRanges[1] = ballRanges[0];
 //  ballRanges[0] = vl.readRange();
-//
-//  uint8_t status = vl.readRangeStatus();
-//  if (status != VL6180X_ERROR_NONE) {
-//    return;
-//  }
 
-  if (ballRanges[0] < 60 and ballRanges[1] < 60 and ballRanges[2] < 60) {
+  uint8_t status = vl.readRangeStatus();
+  if (status != VL6180X_ERROR_NONE) {
+    Serial.println(status);
+    return;
+  }
+
+  if (xPos < 120 and xPos > 0 and ballRanges[0] < 55 and ballRanges[1] < 55 and ballRanges[2] < 55 and ballRanges[3] < 55 and ballRanges[4] < 55 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20) {
     state = has_ball;
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
   } else {
     state = invisible_ball;
   }
- 
+  state = has_ball;
+
   switch (state) {
     case invisible_ball: 
       // Do something smarter here later
+      analogWrite(22, 255);
       motor.stopMotors();
-      motor.dribble(255);
+      motor.dribble(200);
       break;
     case sees_ball:
+      analogWrite(22, 255);
       quadraticBall();
       break;
     case has_ball:
-      motor.stopMotors();
+      analogWrite(22, 0);
+      showAndShoot();
+//      shoot();
 //      turnShoot();
       break;
   }

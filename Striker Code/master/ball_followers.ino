@@ -27,7 +27,7 @@ void quadraticBall(){
   } else {
     // Turn off red LED
     analogWrite(21, 255);
-    motor.dribble(0);
+    motor.dribble(255);
   
     float velocityDirection = angleFromSlope(getPathSlope());
     float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);

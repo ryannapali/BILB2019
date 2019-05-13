@@ -78,10 +78,10 @@ void getCameraReadings() {
     xPos *= -1.0;
     xPos += X_ORIGIN_CALIBRATION;
     oldXPos = xPos;
-    failedReadingCount = 0;
+    failedBallReadingCount = 0;
   } else {
-    failedReadingCount += 1;
-    if (failedReadingCount < 4) {
+    failedBallReadingCount += 1;
+    if (failedBallReadingCount < 4) {
       xPos = oldXPos;
     }
   }
@@ -90,19 +90,27 @@ void getCameraReadings() {
     yPos -= 480.0;
     yPos += Y_ORIGIN_CALIBRATION;
     oldYPos = yPos;
-  } else {
-    if (failedReadingCount < 4) {
-      yPos = oldYPos;
-    }
+  } else if (failedBallReadingCount < 4) {
+    yPos = oldYPos;
   }
 
   if (tPos != 0) {
     tPos -= 640;
     tPos *= -1;
-  }
+    oldTPos = tPos;
+    failedGoalReadingCount = 0;
+  } else {
+    failedGoalReadingCount += 1;
+    if (failedGoalReadingCount < 4) {
+      tPos = oldTPos;
+    }
+  }  
+  
   if (oPos != 0) {
     oPos -= 480;
-  } 
+  } else if (failedGoalReadingCount < 4) {
+    oPos = oldOPos;
+  }
 }
 
 
@@ -136,9 +144,8 @@ void calculateAngles() {
     } else if (oPos < 0) {
       goalAngle += 360;
     }
-
     if (m == .75) {
-      goalAngle = 2000; //goalAngle = 2000 when robot doesn't see ball
+      goalAngle = 2000; //goalAngle = 2000 when robot doesn't see goal
     }
   }
 
