@@ -122,7 +122,7 @@ void loop()
       else analogWrite(wr,0);
     }
     else {
-      //don't print invalid data
+    //don't print invalid data
     }
   }
   else {
@@ -167,9 +167,7 @@ if (readDistance(sensor4) == true)
   {
     if (valid_data == true) {
       Serial.print("sensor 4 ");
-      Serial.println(distance / 2.54);
-      if(distance==65533) analogWrite(r2,255);
-      else analogWrite(r2,0);
+      Serial.println(distance);
     }
     else {
       //don't print invalid data

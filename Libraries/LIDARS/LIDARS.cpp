@@ -22,7 +22,9 @@ float LIDARS::readSensor(uint8_t deviceAddress) {
         return -1; //Sensor did not ACK
     }
     Wire.requestFrom(deviceAddress, (uint8_t)7); //Ask for 7 bytes
+    while(!Wire.available()){
     
+    }
     if (Wire.available()) {
         for (uint8_t x = 0 ; x < 7 ; x++) {
             uint8_t incoming = Wire.read();
