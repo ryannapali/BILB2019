@@ -8,66 +8,38 @@
 #include "LIDARS.h"
 #include "Arduino.h"
 #include <Wire.h>
+#include <LIDARLite.h>
 
 LIDARS::LIDARS() {
     Wire.begin();
+    myLidarLite.begin(0, true);
+    myLidarLite.configure(0);
 }
 
-float LIDARS::readSensor(uint8_t deviceAddress) {
-    Wire.beginTransmission(deviceAddress);
-    Wire.write(0x01);
-    Wire.write(0x02);
-    Wire.write(7); //Data length: 7 bytes for distance data
-    if (Wire.endTransmission(false) != 0) {
-        return -1; //Sensor did not ACK
-    }
-    Wire.requestFrom(deviceAddress, (uint8_t)7); //Ask for 7 bytes
+void tcaselect(uint8_t i) {
+    if (i > 7) return;
     
-    if (Wire.available()) {
-        for (uint8_t x = 0 ; x < 7 ; x++) {
-            uint8_t incoming = Wire.read();
-            
-            if (x == 0) {
-                //Trigger done
-                if (incoming == 0x00) {
-                    return -1;
-                }
-                else if (incoming == 0x01) {
-                    // Data is valid
-                }
-            }
-            else if (x == 2)
-                distance = incoming; //LSB of the distance value "Dist_L"
-            else if (x == 3)
-                distance |= incoming << 8; //MSB of the distance value "Dist_H"
-            else if (x == 4)
-                strength = incoming; //LSB of signal strength value
-            else if (x == 5)
-                strength |= incoming << 8; //MSB of signal strength value
-            else if (x == 6)
-                rangeType = incoming; //range scale
-        }
-    }
-    else {
-        // No wire data available
-        return -1;
-    }
-    
-    return distance/2.54;
+    Wire.beginTransmission(0x70); // TCA Address
+    Wire.write(1 << i);
+    Wire.endTransmission();
 }
 
 float LIDARS::readSensor1() {
-    return readSensor(SENSOR_1);
+    tcaselect(0);
+    return myLidarLite.distance();
 }
 
 float LIDARS::readSensor2() {
-    return readSensor(SENSOR_2);
+    tcaselect(1);
+    return myLidarLite.distance();
 }
 
 float LIDARS::readSensor3() {
-    return readSensor(SENSOR_3);
+    tcaselect(2);
+    return myLidarLite.distance();
 }
 
 float LIDARS::readSensor4() {
-    return readSensor(SENSOR_4);
+    tcaselect(3);
+    return myLidarLite.distance();
 }

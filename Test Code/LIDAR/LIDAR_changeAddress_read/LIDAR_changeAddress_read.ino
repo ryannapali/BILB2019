@@ -23,20 +23,20 @@ void setup()
   delay(150);
   Serial.println("TFMini I2C Test");
 
-  Wire.beginTransmission(defaultsensor);
-  Wire.write(0x00);
-  Wire.write(0x26);
-  Wire.write(1); //Data length: 1
-  Wire.endTransmission(false);
+//  Wire.beginTransmission(defaultsensor);
+//  Wire.write(0x00);
+//  Wire.write(0x26);
+//  Wire.write(1); //Data length: 1
+//  Wire.endTransmission(false);
   
-  Wire.beginTransmission(defaultsensor);
-  Wire.write(sensor2);
-  Wire.endTransmission(true);
+//  Wire.beginTransmission(defaultsensor);
+//  Wire.write(sensor4);
+//  Wire.endTransmission(true);
   
-  Wire.beginTransmission(defaultsensor); 
-  Wire.write(0x06);
-  Wire.endTransmission(true);
-  delay(100);
+//  Wire.beginTransmission(defaultsensor); 
+//  Wire.write(0x06);
+//  Wire.endTransmission(true);
+//  delay(100);
 }
 
 //Write two bytes to a spot

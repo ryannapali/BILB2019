@@ -8,6 +8,9 @@ void quadraticBall(){
   float rotatedYPos = cos(theta)*yPos - sin(theta)*xPos;
   float rotatedXPos = sin(theta)*yPos + cos(theta)*xPos;
 
+  Serial.println(xPos);
+  Serial.println(yPos);
+
   if (millis() - coneSizeIncreaseTime > 1500) {
     coneSize = 2.0;
     coneSizeIncreaseTime = 0;
@@ -15,7 +18,7 @@ void quadraticBall(){
   
   if (abs(rotatedXPos) > abs(coneSize*rotatedYPos)) {
     // Turn on red LED
-    analogWrite(21, 0);
+    analogWrite(RED_PIN, 0);
     motor.dribble(255);
     
     if (xPos < 0 and coneSizeIncreaseTime == 0) {
@@ -26,7 +29,7 @@ void quadraticBall(){
     diagonalBall();
   } else {
     // Turn off red LED
-    analogWrite(21, 255);
+    analogWrite(RED_PIN, 255);
     motor.dribble(255);
   
     float velocityDirection = angleFromSlope(getPathSlope());
@@ -39,23 +42,4 @@ void diagonalBall() {
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
   float directToBallHeading = angleFromSlope(xPos/yPos);
   motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallHeading/2, min(MAX_SPEED, distanceFromBall));
-}
-
-void zigBall(){
-  xTargetDiff = 100 - xPos;
-  float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
-
-  if (abs(xTargetDiff) > 50) { 
-    if (xTargetDiff > 0) {
-      motor.driveToHeadingCorrected(180, 0.0, min(MAX_SPEED, 0.6*distanceFromBall));
-    } else {
-      motor.driveToHeadingCorrected(0, 0.0, min(MAX_SPEED, 0.6*distanceFromBall));
-    }
-  } else {
-    if (yPos > 0) {
-      motor.driveToHeadingCorrected(270, 0.0, min(MAX_SPEED, 0.6*distanceFromBall));
-    } else {
-      motor.driveToHeadingCorrected(90, 0.0, min(MAX_SPEED, 0.6*distanceFromBall));
-    }
-  }
 }
