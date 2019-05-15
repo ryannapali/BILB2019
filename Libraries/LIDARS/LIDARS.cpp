@@ -16,7 +16,7 @@ LIDARS::LIDARS() {
     myLidarLite.configure(0);
 }
 
-void tcaselect(uint8_t i) {
+void LIDARS::tcaselect(uint8_t i) {
     if (i > 7) return;
     
     Wire.beginTransmission(0x70); // TCA Address

@@ -45,10 +45,8 @@ float angleFromSlope(float slope) {
 
 void checkFieldReorient() {
   if(digitalRead(BUTTON_PIN) == LOW){
-    analogWrite(22, 0);
     motor.resetGyro();
   } else {
-    analogWrite(22, 255);
   }
 }
 
@@ -171,4 +169,40 @@ void calculateAngles() {
   if (goalAngle >= 180) {
     goalAngle -= 360;
   }
+}
+
+void ledWhite(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,0);
+}
+void ledYellow(){
+  analogWrite(RED_PIN,255);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,0);
+}
+void ledCyan(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,255);
+  analogWrite(GREEN_PIN,0);
+}
+void ledMagenta(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,255);
+}
+void ledGreen(){
+  analogWrite(RED_PIN,255);
+  analogWrite(BLUE_PIN,255);
+  analogWrite(GREEN_PIN,0);
+}
+void ledBlue(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,255);
+  analogWrite(GREEN_PIN,255);
+}
+void ledRed(){
+  analogWrite(RED_PIN,255);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,255);
 }

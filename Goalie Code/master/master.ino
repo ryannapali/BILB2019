@@ -8,6 +8,10 @@
 #define BUTTON_PIN 12
 #define FIELD_WIDTH 78
 #define FIELD_LENGTH 105
+#define LIDAR_GOAL 
+#define BLUE_PIN 9
+#define GREEN_PIN 10
+#define RED_PIN 14
 
 
 Adafruit_VL6180X vl = Adafruit_VL6180X();
@@ -37,21 +41,24 @@ float backSensor;
 float leftSensor;
 float rightSensor;
 
+float sideSum = 0.0;
+boolean sideSumConfidant = false;
+
 bool interrupted = false;
 bool turnFixed = false;
 
 void setup() {
+  float proportionals[] = {sin(-3.14 + 3.92699082), sin(-3.14 + 5.28834763), sin(-3.14 + 0.994837674), sin(-3.14 + 2.35619449)};
   Serial5.begin(19200);
   Serial.begin(115200);
   pinMode(INTERRUPT_PIN, INPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
-
-  // red led
-  pinMode(21, OUTPUT);
-  analogWrite(21, 255);
-
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(BLUE_PIN,OUTPUT);
+  
   motor.imuInit();
   if (! vl.begin()) {
     Serial.println("Failed to find TOF sensor");
@@ -62,6 +69,7 @@ void setup() {
 void loop() {
   getCameraReadings();
   calculateAngles();
+  checkFieldReorient();
   if (false) { //reimplement
     state = has_ball;
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
@@ -69,19 +77,18 @@ void loop() {
   } else {
     state = invisible_ball;
   }
- 
+  
   switch (state) {
     case invisible_ball: 
-      //Serial.println("invisible ball");
-      //centerToGoal();
+      centerToGoal();
+      ledCyan();
       break;
     case sees_ball:
-      //Serial.println("Sees ball");
       blockBall();
+      ledYellow();
       break;
     case has_ball:
-      Serial.println("Has ball");
-      passBall();
+//      passBall();
       break;
   }
 }

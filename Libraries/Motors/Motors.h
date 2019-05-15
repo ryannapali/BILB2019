@@ -45,6 +45,8 @@ public:
     
     void driveToRelativeHeadingCorrected(float angle, float targetOrientation, float speed);
     
+   void driveToHeadingCorrectedHoldDistance(float angle, float targetOrientation, float Speed, float distanceOff);
+    
     void turnToAbsoluteHeading(float targetAngle, float maxSpeed);
     
     void turnToRelativeHeading(float targetAngle, float maxSpeed);
