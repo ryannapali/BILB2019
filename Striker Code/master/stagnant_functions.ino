@@ -109,8 +109,8 @@ void getCameraReadings() {
 
 void calculateAngles() {
   // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
-  if (xPos > VIDEO_WIDTH || yPos > VIDEO_HEIGHT) { //filter out and bad readings. 2000 is sign of bad readings
-    ballAngle = 2000;
+  if (xPos > VIDEO_WIDTH || yPos > VIDEO_HEIGHT) { 
+    ballAngle = 0;
   } else {
     double m = (float)(yPos) / (float)(xPos);
     ballAngle = atan((double)m);
@@ -122,12 +122,12 @@ void calculateAngles() {
     }
 
     if (m == .75) {
-      ballAngle = 2000; //ballAngle = 2000 when robot doesn't see ball
+      ballAngle = 0;
     }
   }
 
-  if (tPos > VIDEO_WIDTH || oPos > VIDEO_HEIGHT) { //filter out and bad readings. 2000 is sign of bad readings
-    goalAngle = 2000;
+  if (tPos > VIDEO_WIDTH || oPos > VIDEO_HEIGHT) {
+    goalAngle = 0;
   } else {
     double m = (float)(oPos) / (float)(tPos);
     goalAngle = atan((double)m);
@@ -138,7 +138,7 @@ void calculateAngles() {
       goalAngle += 360.0;
     }
     if (m == .75) {
-      goalAngle = 2000; //goalAngle = 2000 when robot doesn't see goal
+      goalAngle = 0;
     }
   }
 

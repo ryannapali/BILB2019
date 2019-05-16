@@ -258,6 +258,15 @@ void KISS() {
   }
 }
 
+void KISSBackwards() {
+  if (goalAngle == 0) {
+    motor.dribble(255);
+    motor.driveToHeadingCorrected(motor.getRelativeAngle(0.0), 180.0, MAX_SPEED);
+  } else {
+    turnShoot();
+  }
+}
+
 bool hasRotated = false;
 void executeDodgeOnGoalie(){
      // Dodging left? Probably need to do some turning w/out moving first
