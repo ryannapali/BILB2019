@@ -229,7 +229,7 @@ void Motors::driveToHeading(float angle, float speed) {
     adjustedAngle = 360 - adjustedAngle;
     
     float rad = getRad(adjustedAngle);
-    float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.28834763), sin(-rad + 0.994837674), sin(-rad + 2.35619449)};
+    float proportionals[] = {sin(-rad + 3.92699082), sin(-rad + 5.4977871438), sin(-rad + 0.7853981634), sin(-rad + 2.35619449)};
     
     setM1Speed(-speed * proportionals[0]);
     setM2Speed(-speed * proportionals[1]);
@@ -254,8 +254,8 @@ void Motors::driveToRelativeHeadingCorrected(float angle, float targetOrientatio
     float turningPower = 2.5*relativeAngle/180.0;
     
     float rad = getRad(adjustedAngle);
-    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.28834763) + turningPower,
-        sin(-rad + 0.994837674) + turningPower, sin(-rad + 2.35619449) + turningPower};
+    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.4977871438) + turningPower,
+        sin(-rad + 0.7853981634) + turningPower, sin(-rad + 2.35619449) + turningPower};
     
     float maxPower = max(max(abs(proportionals[0]), abs(proportionals[1])), max(abs(proportionals[2]), abs(proportionals[3])));
     
@@ -285,8 +285,8 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
     float turningPower = 2.5*relativeAngle/180.0;
     
     float rad = getRad(adjustedAngle);
-    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.28834763) + turningPower,
-        sin(-rad + 0.994837674) + turningPower, sin(-rad + 2.35619449) + turningPower};
+    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.4977871438) + turningPower,
+        sin(-rad + 0.7853981634) + turningPower, sin(-rad + 2.35619449) + turningPower};
     
     float maxPower = max(max(abs(proportionals[0]), abs(proportionals[1])), max(abs(proportionals[2]), abs(proportionals[3])));
     
@@ -298,6 +298,43 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
     setM3Speed(-speed * normalizedProportionals[2]);
     setM4Speed(-speed * normalizedProportionals[3]);
 }
+
+void Motors::driveToHeadingCorrectedHoldDistance(float angle, float targetOrientation, float speed, float distanceOff){
+if(speed > 210) speed = 210;
+float adjustedAngle = angle - 180;
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    if (adjustedAngle >= 180) {
+        adjustedAngle -= 360;
+    }
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    adjustedAngle = 360 - adjustedAngle;
+    
+    float relativeAngle = getRelativeAngle(targetOrientation);
+    float turningPower = 2.5*relativeAngle/180.0;
+    float distancePower = 0.7*distanceOff;
+    
+    float rad = getRad(adjustedAngle);
+    float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.4977871438) + turningPower,
+        sin(-rad + 0.7853981634) + turningPower, sin(-rad + 2.35619449) + turningPower};
+    
+    float maxPower = max(max(abs(proportionals[0]), abs(proportionals[1])), max(abs(proportionals[2]), abs(proportionals[3])));
+    
+    float normalizedProportionals[] = {proportionals[0] / maxPower, proportionals[1] / maxPower,
+        proportionals[2] / maxPower, proportionals[3] / maxPower};
+    
+    float scaleDown = ((255-abs(distancePower))/255);
+    
+    setM1Speed((-speed * normalizedProportionals[0] * scaleDown) + distancePower);
+    setM2Speed((-speed * normalizedProportionals[1] * scaleDown) + distancePower);
+    setM3Speed((-speed * normalizedProportionals[2] * scaleDown) - distancePower);
+    setM4Speed((-speed * normalizedProportionals[3] * scaleDown) - distancePower);
+
+}
+
 
 
 void Motors::turnToAbsoluteHeading(float targetAngle, float maxSpeed) {
