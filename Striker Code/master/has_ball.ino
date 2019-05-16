@@ -1,9 +1,6 @@
-#define INTERRUPT_PIN 39
-#define IR_FRONT 20
 #define DODGE_RADIUS 8.0
 // Inches per second
 #define SPEED_ESTIMATE 30.0
-#define SOLENOID_PIN 27
 #define MAXIMUM_SHOT_DISTANCE 400
 #define CORNER_WALL_DISTANCE 63.0
 
@@ -77,13 +74,9 @@ void goBackwardsToShoot() {
   }
   
   if (error > 15.0 and needsToTurn and turningToShoot == false) {
-    Serial.println(motor.getRelativeAngle(0.0));
-    Serial.println(motor.getRelativeAngle(180.0));
     motor.driveToRelativeHeadingCorrected(90.0, 10.0, min(error*error/2, 150));
     return;
   } else if (error < -15.0 and needsToTurn and turningToShoot == false) {
-    Serial.println(motor.getRelativeAngle(0.0));
-    Serial.println(motor.getRelativeAngle(180.0));
     motor.driveToRelativeHeadingCorrected(-90.0, -10.0, min(error*error/2, 150));
     return;
   }
@@ -107,35 +100,12 @@ void goBackwardsToShoot() {
 }
 
 bool dodgeIfNeeded() {
-  frontDistIR = analogRead(IR_FRONT);
+  frontDistIR = analogRead(FRONT_IR_PIN);
   if (frontDistIR >= 200 and isExecutingForwardSpinMove == false) {
     isExecutingForwardSpinMove = true;
   }
   if (isExecutingForwardSpinMove) executeForwardSpinMove();
   return isExecutingForwardSpinMove;
-}
-
-bool hasRotated = false;
-void executeDodgeOnGoalie(){
-     // Dodging left? Probably need to do some turning w/out moving first
-    Serial.println("dodging on goalie");
-    if (abs(motor.getRelativeAngle(270.0)) > 3.0 and hasRotated == false) {
-      motor.turnToAbsoluteHeading(270.0, 180);
-      return;
-    } else {
-      hasRotated = true;
-    }
-    float fractionComplete = (millis()-dodgeStartTime)/TOTAL_DODGE_TIME;
-    motor.driveToHeadingCorrected(180.0, 270.0-(1.0-fractionComplete)*180.0, MAX_SPEED);
-    if (fractionComplete >= 1) {
-      while (abs(motor.getRelativeAngle(0.0)) > 3.0) {
-        motor.turnToAbsoluteHeading(0.0, 180);
-      }
-      bool shotSuccessful = shoot();
-      if (shotSuccessful) {
-        isExecutingDodgeOnGoalie = false;
-      }
-    }
 }
 
 void executeForwardSpinMove(){
@@ -286,4 +256,27 @@ void KISS() {
   } else {
     turnShoot();
   }
+}
+
+bool hasRotated = false;
+void executeDodgeOnGoalie(){
+     // Dodging left? Probably need to do some turning w/out moving first
+    Serial.println("dodging on goalie");
+    if (abs(motor.getRelativeAngle(270.0)) > 3.0 and hasRotated == false) {
+      motor.turnToAbsoluteHeading(270.0, 180);
+      return;
+    } else {
+      hasRotated = true;
+    }
+    float fractionComplete = (millis()-dodgeStartTime)/TOTAL_DODGE_TIME;
+    motor.driveToHeadingCorrected(180.0, 270.0-(1.0-fractionComplete)*180.0, MAX_SPEED);
+    if (fractionComplete >= 1) {
+      while (abs(motor.getRelativeAngle(0.0)) > 3.0) {
+        motor.turnToAbsoluteHeading(0.0, 180);
+      }
+      bool shotSuccessful = shoot();
+      if (shotSuccessful) {
+        isExecutingDodgeOnGoalie = false;
+      }
+    }
 }

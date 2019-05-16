@@ -7,6 +7,7 @@
 #define INTERRUPT_PIN 39
 #define SOLENOID_PIN 27
 #define BUTTON_PIN 12
+#define FRONT_IR_PIN 20
 #define RED_PIN 21
 #define GREEN_PIN 22
 #define BLUE_PIN 23
