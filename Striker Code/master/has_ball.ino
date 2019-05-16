@@ -37,6 +37,7 @@ void turnShoot() {
     motor.dribble(255);
   } else {
     motor.stopMotors();
+    ledWhite();
     shoot();
     turningToShoot = false;
   }
@@ -275,4 +276,14 @@ void showAndShoot() {
   oldBackSensor = backSensor;
   oldLeftSensor = leftSensor;  
   oldRightSensor = rightSensor;
+}
+
+// Keep It Simple Stupid
+void KISS() {
+  if (goalAngle == 0) {
+    motor.dribble(255);
+    motor.driveToHeadingCorrected(0.0, 0.0, MAX_SPEED);
+  } else {
+    turnShoot();
+  }
 }

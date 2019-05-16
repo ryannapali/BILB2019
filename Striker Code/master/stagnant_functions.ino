@@ -26,15 +26,6 @@ float angleFromSlope(float slope) {
   return angle;
 }
 
-void checkFieldReorient() {
-  if(digitalRead(BUTTON_PIN) == LOW){
-    analogWrite(22, 0);
-    motor.resetGyro();
-  } else {
-    analogWrite(22, 255);
-  }
-}
-
 void clearCameraBuffer() {
   Serial5.clear();
 }
@@ -154,6 +145,71 @@ void calculateAngles() {
   if (goalAngle >= 180) {
     goalAngle -= 360.0;
   }
+}
+
+void updateTOFReadings() {
+  ballRanges[4] = ballRanges[3];
+  ballRanges[3] = ballRanges[2];
+  ballRanges[2] = ballRanges[1];
+  ballRanges[1] = ballRanges[0];
+  ballRanges[0] = vl.readRange();
+
+  uint8_t status = vl.readRangeStatus();
+  if (status != VL6180X_ERROR_NONE) {
+    Serial.println(status);
+    return;
+  }
+}
+
+bool gyroSet = false;
+void checkForIMUZero() {
+  int val = 0;
+  val = digitalRead(BUTTON_PIN);
+  if (val == LOW) {
+    motor.resetGyro();
+    gyroSet = true;
+  }
+
+  if (gyroSet) {
+    analogWrite(10, 255);
+    return;
+  }
+  
+  if (motor.isCalibrated()) {
+    analogWrite(10, 0);
+  } else {
+    analogWrite(10, 255);
+  }
+}
+
+void ledWhite() {
+  analogWrite(RED_PIN, 0);
+  analogWrite(GREEN_PIN, 0);
+  analogWrite(BLUE_PIN, 0);
+}
+
+void ledRed() {
+  analogWrite(RED_PIN, 0);
+  analogWrite(GREEN_PIN, 255);
+  analogWrite(BLUE_PIN, 255);
+}
+
+void ledGreen() {
+  analogWrite(RED_PIN, 255);
+  analogWrite(GREEN_PIN, 0);
+  analogWrite(BLUE_PIN, 255);
+}
+
+void ledBlue() {
+  analogWrite(RED_PIN, 255);
+  analogWrite(GREEN_PIN, 255);
+  analogWrite(BLUE_PIN, 0);
+}
+
+void ledCyan() {
+  analogWrite(RED_PIN, 255);
+  analogWrite(GREEN_PIN, 0);
+  analogWrite(BLUE_PIN, 0);
 }
 
 void logLIDARS() {
