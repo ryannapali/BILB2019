@@ -2,12 +2,12 @@
 #include "Motors.h"
 #include "LIDARS.h"
 
-#define MAX_SPEED 180.0
+#define MAX_SPEED 230.0
 #define INTERRUPT_PIN 39
 #define SOLENOID_PIN 27
 #define BUTTON_PIN 12
-#define FIELD_WIDTH 78
-#define FIELD_LENGTH 105
+#define FIELD_WIDTH 185
+#define FIELD_LENGTH 244
 #define RED_PIN 21
 #define GREEN_PIN 22
 
@@ -53,9 +53,12 @@ void interrupt() {
   interrupted = true;
 }
 
-void setup() {
+void setup() {  
   Serial5.begin(19200);
   Serial.begin(115200);
+
+  delay(600);
+
   pinMode(INTERRUPT_PIN, INPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -69,24 +72,30 @@ void setup() {
   analogWrite(GREEN_PIN, 255);
 
   motor.imuInit();
+  
   if (! vl.begin()) {
     Serial.println("Failed to find TOF sensor");
     while (1);
   }
+
+  delay(100);
 }
 
-float lastReadTime = 0.0;
+float lastBallReadTime = 0.0;
 int lostBallDueToPosition = 0;
-void loop() {
-//  if (interrupted) {
-//    fixOutOfBounds();
-//    return;
-//  }
 
+void loop() {
+  if (interrupted) {
+    fixOutOfBounds();
+    return;
+  }
+
+  checkForIMUZero();
+  
   getCameraReadings();
   calculateAngles();
   checkFieldReorient();
-  
+
 // Get ball TOF sensor readings:
   ballRanges[4] = ballRanges[3];
   ballRanges[3] = ballRanges[2];
@@ -101,15 +110,16 @@ void loop() {
   }
 
   // Monitoring hiccups in ball possession
-  bool inRange = ballRanges[0] < 57 and ballRanges[1] < 57 and ballRanges[2] < 57 and ballRanges[3] < 57 and ballRanges[4] < 57 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20;
-  if (xPos > 120 or xPos < 0 and inRange) {
-    Serial.println("POSITION OF BALL PREVENTING POSESSION");
+  bool inRange = ballRanges[0] < 59 and ballRanges[1] < 59 and ballRanges[2] < 59 and ballRanges[3] < 59 and ballRanges[4] < 59 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20;
+  if (xPos > 130 or xPos < 0 and inRange) {
+    Serial.print("POSITION OF BALL PREVENTING POSESSION: ");
+    Serial.println(xPos);
     lostBallDueToPosition += 1;
-  } else if (xPos < 120 and xPos > 0 and inRange) {
+  } else if (xPos < 130 and xPos > 0 and inRange) {
     lostBallDueToPosition = 0;
   }
   
-  if ((xPos < 120 and xPos > 0 or lostBallDueToPosition < 4) and inRange) {
+  if (((xPos < 130 and xPos > 0) or lostBallDueToPosition < 4) and inRange) {
     state = has_ball;
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
@@ -121,22 +131,25 @@ void loop() {
     case invisible_ball: 
       // Do something smarter here later
       analogWrite(GREEN_PIN, 255);
-      motor.stopMotors();
+      if (lastBallReadTime - millis() > 250) motor.stopMotors();
       motor.dribble(200);
       break;
     case sees_ball:
+      lastBallReadTime = millis();
       analogWrite(GREEN_PIN, 255);
-      quadraticBall();
+      diagonalBall();
       break;
     case has_ball:
       analogWrite(GREEN_PIN, 0);
+//      motor.stopMotors();
       goBackwardsToShoot();
       break;
   }
 }
 
-// Need to tweak for new LIDARS
 void fixOutOfBounds() {
+  logLIDARS();
+    
   if (abs(motor.getRelativeAngle(0.0)) < 5 or turnFixed) {
     turnFixed = true;
     
@@ -147,30 +160,61 @@ void fixOutOfBounds() {
 
     float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
 
-    if (leftSensor != -1 and rightSensor != -1 and backSensor != -1 and frontSensor != -1) {
-      if (frontSensor <= minReading and frontSensor < 21) {
-        motor.driveToHeadingCorrected(-180, 0, MAX_SPEED);
-      } else if (backSensor <= minReading and backSensor < 21) {
-        motor.driveToHeadingCorrected(0, 0, MAX_SPEED);
-      } else if (rightSensor <= minReading and rightSensor < 21) {
-        motor.driveToHeadingCorrected(270, 0, MAX_SPEED);
-      } else if (leftSensor <= minReading and leftSensor < 21) {
-        motor.driveToHeadingCorrected(90, 0, MAX_SPEED);
+    if (frontSensor <= minReading and frontSensor < 36) {
+      motor.driveToHeadingCorrected(-180, 0, MAX_SPEED);
+      return;
+    } else if (backSensor <= minReading and backSensor < 36) {
+      motor.driveToHeadingCorrected(0, 0, MAX_SPEED);
+      return;
+    } else if (rightSensor <= minReading and rightSensor < 36) {
+      if (leftSensor < 36) {
+        if (frontSensor < backSensor) {
+          motor.driveToHeadingCorrected(-180, 0, MAX_SPEED);
+        } else {
+          motor.driveToHeadingCorrected(0, 0, MAX_SPEED);
+        }
       } else {
-        motor.stopMotors();
-        interrupted = false;
-        turnFixed = false;
+        motor.driveToHeadingCorrected(270, 0, MAX_SPEED);
       }
-      Serial.print("front: ");
-      Serial.println(frontSensor);
-      Serial.print("right: ");
-      Serial.println(rightSensor);
-      Serial.print("back: ");
-      Serial.println(backSensor);
-      Serial.print("left: ");
-      Serial.println(leftSensor);
+      return;
+    } else if (leftSensor <= minReading and leftSensor < 36) {
+      if (rightSensor < 36) {
+        if (frontSensor < backSensor) {
+          motor.driveToHeadingCorrected(-180, 0, MAX_SPEED);
+        } else {
+          motor.driveToHeadingCorrected(0, 0, MAX_SPEED);
+        }
+      } else {
+        motor.driveToHeadingCorrected(90, 0, MAX_SPEED);
+      }
+      return;
+    } else {
+      motor.stopMotors();
+      interrupted = false;
+      turnFixed = false;
     }
   } else {
     motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
+  }
+}
+
+bool gyroSet = false;
+void checkForIMUZero() {
+  int val = 0;
+  val = digitalRead(BUTTON_PIN);
+  if (val == LOW) {
+    motor.resetGyro();
+    gyroSet = true;
+  }
+
+  if (gyroSet) {
+    analogWrite(10, 255);
+    return;
+  }
+  
+  if (motor.isCalibrated()) {
+    analogWrite(10, 0);
+  } else {
+    analogWrite(10, 255);
   }
 }

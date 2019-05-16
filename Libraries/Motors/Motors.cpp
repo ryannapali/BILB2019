@@ -322,6 +322,10 @@ void Motors::turnToRelativeHeading(float targetAngle, float maxSpeed) {
 float Motors::getRelativeAngle(float targetAngle) {
     imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
     float currentAngle = euler.x();
+    currentAngle -= imuZero;
+    if (currentAngle < 0) {
+        currentAngle += 360;
+    }
     
     float relativeAngle = currentAngle - targetAngle;
     if (relativeAngle < 0) {
@@ -335,5 +339,12 @@ float Motors::getRelativeAngle(float targetAngle) {
 }
 
 void Motors::resetGyro() {
-    
+    imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+    imuZero = euler.x();
+}
+
+bool Motors::isCalibrated() {
+    uint8_t system, gyro, accel, mag = 0;
+    bno.getCalibration(&system, &gyro, &accel, &mag);
+    return ((gyro == 3) and (mag == 3));
 }

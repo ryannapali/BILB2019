@@ -52,6 +52,8 @@ public:
     float getRelativeAngle(float targetAngle);
     
     void resetGyro();
+    
+    bool isCalibrated();
 private:
     void MotorsInit();
     void buttonInit();
@@ -92,6 +94,7 @@ private:
     int max_speed = 255;
     int pause = 10;
     
+    float imuZero = 0.0;
 };
 
 #endif

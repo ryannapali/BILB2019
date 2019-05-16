@@ -1,7 +1,9 @@
-#define X_ORIGIN_CALIBRATION 25.0 
-#define Y_ORIGIN_CALIBRATION 0.0 
+#define X_ORIGIN_CALIBRATION 50.0 
+#define Y_ORIGIN_CALIBRATION 15.0 
 #define PATH_CURVINESS 3.0
 #define TARGET_DIST_BEHIND_BALL 110.0
+#define VIDEO_WIDTH 640
+#define VIDEO_HEIGHT 480
 
 float getPathSlope() {
   if (xPos < 0) {
@@ -74,7 +76,7 @@ void getCameraReadings() {
   oPos = word(highChar4, lowChar4);
   
   if (xPos != 0) {
-    xPos -= 640.0;
+    xPos -= VIDEO_WIDTH/2.0;
     xPos *= -1.0;
     xPos += X_ORIGIN_CALIBRATION;
     oldXPos = xPos;
@@ -87,7 +89,7 @@ void getCameraReadings() {
   }
 
   if (yPos != 0) {
-    yPos -= 480.0;
+    yPos -= VIDEO_HEIGHT/2.0;
     yPos += Y_ORIGIN_CALIBRATION;
     oldYPos = yPos;
   } else if (failedBallReadingCount < 4) {
@@ -95,7 +97,7 @@ void getCameraReadings() {
   }
 
   if (tPos != 0) {
-    tPos -= 640;
+    tPos -= VIDEO_WIDTH/2.0;
     tPos *= -1;
     oldTPos = tPos;
     failedGoalReadingCount = 0;
@@ -107,7 +109,7 @@ void getCameraReadings() {
   }  
   
   if (oPos != 0) {
-    oPos -= 480;
+    oPos -= VIDEO_HEIGHT/2.0;
   } else if (failedGoalReadingCount < 4) {
     oPos = oldOPos;
   }
@@ -116,16 +118,16 @@ void getCameraReadings() {
 
 void calculateAngles() {
   // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
-  if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
+  if (xPos > VIDEO_WIDTH || yPos > VIDEO_HEIGHT) { //filter out and bad readings. 2000 is sign of bad readings
     ballAngle = 2000;
   } else {
     double m = (float)(yPos) / (float)(xPos);
     ballAngle = atan((double)m);
     ballAngle *= 57.2957795129;
     if (xPos < 0) {
-      ballAngle += 180;
+      ballAngle += 180.0;
     } else if (yPos < 0) {
-      ballAngle += 360;
+      ballAngle += 360.0;
     }
 
     if (m == .75) {
@@ -133,16 +135,16 @@ void calculateAngles() {
     }
   }
 
-  if (tPos > 1280 || oPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
+  if (tPos > VIDEO_WIDTH || oPos > VIDEO_HEIGHT) { //filter out and bad readings. 2000 is sign of bad readings
     goalAngle = 2000;
   } else {
     double m = (float)(oPos) / (float)(tPos);
     goalAngle = atan((double)m);
     goalAngle *= 57.2957795129;
     if (tPos < 0) {
-      goalAngle += 180;
+      goalAngle += 180.0;
     } else if (oPos < 0) {
-      goalAngle += 360;
+      goalAngle += 360.0;
     }
     if (m == .75) {
       goalAngle = 2000; //goalAngle = 2000 when robot doesn't see goal
@@ -150,6 +152,17 @@ void calculateAngles() {
   }
 
   if (goalAngle >= 180) {
-    goalAngle -= 360;
+    goalAngle -= 360.0;
   }
+}
+
+void logLIDARS() {
+  Serial.print("front: ");
+  Serial.println(frontSensor);
+  Serial.print("right: ");
+  Serial.println(rightSensor);
+  Serial.print("back: ");
+  Serial.println(backSensor);
+  Serial.print("left: ");
+  Serial.println(leftSensor);
 }

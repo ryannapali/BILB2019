@@ -1,13 +1,17 @@
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+
 Adafruit_BNO055 bno = Adafruit_BNO055();
 uint8_t sys, gyro, accel, mag;
 void setup() {
   // put your setup code here, to run once:
-
+IMUInit();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
+IMU_calibrate();
 }
 
 void IMUInit() {
@@ -33,10 +37,10 @@ void IMU_calibrate()
   Serial.print(" Mag=");
   Serial.println(mag, DEC);
 
-  if (gyro == 3 && mag == 3) setRGB(0, 255, 0);
-  else if (gyro < 2 && mag < 2) setRGB(255, 0, 0);
-  else if (gyro < 2 && mag == 3) setRGB(255, 0, 255);
-  else if (mag < 2 && gyro == 3) setRGB(255, 255, 0);
-  else setRGB(0, 0, 255);
+//  if (gyro == 3 && mag == 3) setRGB(0, 255, 0);
+//  else if (gyro < 2 && mag < 2) setRGB(255, 0, 0);
+//  else if (gyro < 2 && mag == 3) setRGB(255, 0, 255);
+//  else if (mag < 2 && gyro == 3) setRGB(255, 255, 0);
+//  else setRGB(0, 0, 255);
   delay(100);
 }
