@@ -1,10 +1,3 @@
-#define X_ORIGIN_CALIBRATION 50.0 
-#define Y_ORIGIN_CALIBRATION 15.0 
-#define PATH_CURVINESS 3.0
-#define TARGET_DIST_BEHIND_BALL 110.0
-#define VIDEO_WIDTH 640
-#define VIDEO_HEIGHT 480
-
 float getPathSlope() {
   if (xPos < 0) {
     return PATH_CURVINESS*(xPos-TARGET_DIST_BEHIND_BALL)/yPos;
@@ -161,6 +154,74 @@ void updateTOFReadings() {
   }
 }
 
+void fixOutOfBounds(int side) {
+    logLIDARS();
+    int slowerSpeed = 100; 
+  
+    if (abs(motor.getRelativeAngle(side)) < 5 or turnFixed) {
+      turnFixed = true;
+      
+      frontSensor = lidars.readSensor1();
+      backSensor = lidars.readSensor3();
+      leftSensor = lidars.readSensor2();
+      rightSensor = lidars.readSensor4();
+  
+      float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
+  
+      if (frontSensor <= minReading and frontSensor < 45) {
+        if (backSensor < 36) {
+          if (leftSensor < rightSensor) {
+            motor.driveToHeadingCorrected(90, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(270, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
+        }
+        return;
+      } else if (backSensor <= minReading and backSensor < 36) {
+        if (frontSensor < 36) {
+          if (leftSensor < rightSensor) {
+            motor.driveToHeadingCorrected(90, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(270, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
+        }
+        return;
+      } else if (rightSensor <= minReading and rightSensor < 45) {
+        if (leftSensor < 36) {
+          if (frontSensor < backSensor) {
+            motor.driveToHeadingCorrected(-180, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(0, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
+        }
+        return;
+      } else if (leftSensor <= minReading and leftSensor < 45) {
+        if (rightSensor < 36) {
+          if (frontSensor < backSensor) {
+            motor.driveToHeadingCorrected(-180, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(0, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
+        }
+        return;
+      } else {
+        motor.stopMotors();
+        interrupted = false;
+        turnFixed = false;
+      }
+    } else {
+      motor.turnToAbsoluteHeading(side, MAX_SPEED);
+  }
+}
+
 bool gyroSet = false;
 void checkForIMUZero() {
   int val = 0;
@@ -169,47 +230,55 @@ void checkForIMUZero() {
     motor.resetGyro();
     gyroSet = true;
   }
+  else analogWrite(WHITEA_PIN,0);
 
   if (gyroSet) {
-    analogWrite(10, 255);
-    return;
-  }
-  
-  if (motor.isCalibrated()) {
-    analogWrite(10, 0);
+   analogWrite(WHITEA_PIN,255);
+   gyroSet=false;
   } else {
-    analogWrite(10, 255);
+   analogWrite(WHITEA_PIN,0);
   }
 }
 
-void ledWhite() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(GREEN_PIN, 0);
-  analogWrite(BLUE_PIN, 0);
+void ledWhite(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,0);
 }
-
-void ledRed() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(GREEN_PIN, 255);
-  analogWrite(BLUE_PIN, 255);
+void ledYellow(){
+  analogWrite(RED_PIN,255);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,0);
 }
-
-void ledGreen() {
-  analogWrite(RED_PIN, 255);
-  analogWrite(GREEN_PIN, 0);
-  analogWrite(BLUE_PIN, 255);
+void ledCyan(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,255);
+  analogWrite(GREEN_PIN,0);
 }
-
-void ledBlue() {
-  analogWrite(RED_PIN, 255);
-  analogWrite(GREEN_PIN, 255);
-  analogWrite(BLUE_PIN, 0);
+void ledMagenta(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,0);
+  analogWrite(GREEN_PIN,255);
 }
-
-void ledCyan() {
-  analogWrite(RED_PIN, 255);
-  analogWrite(GREEN_PIN, 0);
-  analogWrite(BLUE_PIN, 0);
+void ledGreen(){
+  analogWrite(RED_PIN,255);
+  analogWrite(BLUE_PIN,255);
+  analogWrite(GREEN_PIN,0);
+}
+void ledBlue(){
+  analogWrite(RED_PIN,0);
+  analogWrite(BLUE_PIN,255);
+  analogWrite(GREEN_PIN,255);
+}
+void ledRed(){
+  analogWrite(RED_PIN,255); //255
+  analogWrite(BLUE_PIN,0); //0
+  analogWrite(GREEN_PIN,255); //0
+}
+void ledPurple(){
+  analogWrite(RED_PIN,44);
+  analogWrite(GREEN_PIN,0);
+  analogWrite(BLUE_PIN,63);
 }
 
 void logLIDARS() {
@@ -222,3 +291,49 @@ void logLIDARS() {
   Serial.print("left: ");
   Serial.println(leftSensor);
 }
+
+void flash(){
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+}
+

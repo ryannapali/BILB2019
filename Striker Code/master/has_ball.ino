@@ -1,23 +1,3 @@
-#define DODGE_RADIUS 8.0
-// Inches per second
-#define SPEED_ESTIMATE 30.0
-#define MAXIMUM_SHOT_DISTANCE 400
-#define CORNER_WALL_DISTANCE 63.0
-
-#define TOTAL_DODGE_TIME 1000.0*DODGE_RADIUS*PI/SPEED_ESTIMATE
-
-bool hasClearShot = false; 
-float strafeStatus = 0;
-bool shouldStrafe = false;
-
-float frontDistIR = 0.0;
-bool isExecutingForwardSpinMove = false;
-bool isExecutingDodgeOnGoalie = false;
-
-float dodgeStartTime = 0.0;
-
-bool turningToShoot = false;
-
 void turnShoot() {
   if (goalAngle == 0.0) {
     motor.stopMotors();
@@ -34,7 +14,6 @@ void turnShoot() {
     motor.dribble(255);
   } else {
     motor.stopMotors();
-    ledWhite();
     shoot();
     turningToShoot = false;
   }

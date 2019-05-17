@@ -1,8 +1,3 @@
-float xTargetDiff = 1000;
-
-float coneSize = 2.0;
-float coneSizeIncreaseTime = 0;
-
 void quadraticBall() {
   float theta = -motor.getRelativeAngle(0.0)/180.0*PI;
   float rotatedYPos = cos(theta)*yPos - sin(theta)*xPos;
@@ -21,7 +16,6 @@ void quadraticBall() {
   
   if (abs(rotatedXPos) > abs(coneSize*rotatedYPos)) {
     // Turn on red LED
-    analogWrite(RED_PIN, 0);
     motor.dribble(255);
     
     if (xPos < 0 and coneSizeIncreaseTime == 0) {
@@ -32,7 +26,6 @@ void quadraticBall() {
     diagonalBall();
   } else {
     // Turn off red LED
-    analogWrite(RED_PIN, 255);
     motor.dribble(255);
   
     float velocityDirection = angleFromSlope(getPathSlope());
@@ -44,5 +37,6 @@ void quadraticBall() {
 void diagonalBall() {
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
   float directToBallHeading = angleFromSlope(xPos/yPos);
-  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallHeading, min(MAX_SPEED, distanceFromBall));
+  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallHeading, min(MAX_SPEED, 
+  distanceFromBall));
 }
