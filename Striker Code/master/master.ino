@@ -51,7 +51,7 @@ void setup() {
 }
 
 void loop() {
-  Serial.println(state);
+
   if (interrupted){
     int side = 0;
     int currentAngle = motor.getRelativeAngle(0.0);
@@ -75,9 +75,8 @@ void loop() {
   } else if (xPos < 130 and xPos > 40 and inRange) {
     lostBallDueToPosition = 0;
   }
-  if(readyToShoot){
-    state = shooting;
-  } else if (((xPos < 130 and xPos > 40) or lostBallDueToPosition < 4) and inRange) {
+  
+  if (((xPos < 130 and xPos > 40) or lostBallDueToPosition < 4) and inRange) {
     state = has_ball;
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
@@ -102,10 +101,9 @@ void loop() {
       break;
     case has_ball:
       ledGreen();
-      getToGoal();
-      break;
-    case shooting:
-      shootToOpenGoal();
+      backSensor = lidars.readSensor3();
+      if(motor.getRelativeAngle(180) < 15 and backSensor < 80) shootToOpenGoal();
+      else getToGoal();
       break;
   }
 }

@@ -23,7 +23,7 @@ float lastBallReadTime = 0.0;
 int lostBallDueToPosition = 0;
 
 
-enum State { has_ball, sees_ball, invisible_ball, shooting };
+enum State { has_ball, sees_ball, invisible_ball};
 State state = invisible_ball;
 
 float xPos = 1;
