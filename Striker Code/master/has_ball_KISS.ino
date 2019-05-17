@@ -11,17 +11,20 @@ void getToGoal(){
     rightSensor = lidars.readSensor4();
     motor.driveToHeadingCorrected(180+(100-rightSensor),180,DRIB_SPEED);
   }
+  else if(far == false) readyToShoot = true;
 }
 
 void shootToOpenGoal(){
-  while(abs(goalAngle<5)){ 
+  while(abs(goalAngle>5)){ 
     if(goalAngle<0) motor.spin(40);
     else motor.spin(-40);
     motor.dribble(255);
   }
-  motor.dribble(0);
-  shoot();
+  if(abs(goalAngle < 5)){
+    motor.dribble(0);
+    shoot();
   return;
+  }
 }
 
 boolean farFromGoal(){ 
