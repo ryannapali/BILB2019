@@ -1,4 +1,3 @@
-//FROM MASTER
 #define MAX_SPEED 230.0
 #define MAX_BACK_SPEED 120.0
 
@@ -6,6 +5,7 @@
 #define SOLENOID_PIN 27
 #define BUTTON_PIN 12
 #define FRONT_IR_PIN 20
+#define BACK_IR_PIN 16
 #define RED_PIN 14
 #define GREEN_PIN 10
 #define BLUE_PIN 9
@@ -15,7 +15,13 @@
 #define FIELD_WIDTH 185
 #define FIELD_LENGTH 244
 
+#define MINIMUM_HAS_BALL_X 40
+#define MAXIMUM_HAS_BALL_X 70
+
 #define PIVOT_K 4.0
+
+#define MAXIMUM_SHOT_DISTANCE 210.0
+#define CORNER_WALL_DISTANCE 63.0
 
 float ballAngle;
 float goalAngle;
@@ -63,15 +69,6 @@ float xTargetDiff = 1000;
 
 float coneSize = 2.0;
 float coneSizeIncreaseTime = 0;
-
-//FROM HAS BALL
-#define DODGE_RADIUS 8.0
-// Inches per second
-#define SPEED_ESTIMATE 30.0
-#define MAXIMUM_SHOT_DISTANCE 400
-#define CORNER_WALL_DISTANCE 63.0
-
-#define TOTAL_DODGE_TIME 1000.0*DODGE_RADIUS*PI/SPEED_ESTIMATE
 
 bool hasClearShot = false; 
 float strafeStatus = 0;

@@ -231,6 +231,7 @@ void checkForIMUZero() {
   int val = 0;
   val = digitalRead(BUTTON_PIN);
   if (val == LOW) {
+    Serial.println("RESETTING");
     motor.resetGyro();
     gyroSet = true;
   }

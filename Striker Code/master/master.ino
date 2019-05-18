@@ -53,6 +53,7 @@ void setup() {
 }
 
 bool shouldKissForwards = false;
+float lastHadBall = 0.0;
 
 void loop() {
   if (interrupted and millis()-lastCalledTurnToShoot > 100) {
@@ -70,21 +71,29 @@ void loop() {
   getCameraReadings();
   calculateAngles();
   updateTOFReadings();
-
+  
   // Monitoring hiccups in ball possession
   bool inRange = ballRanges[0] < 59 and ballRanges[1] < 59 and ballRanges[2] < 59 and ballRanges[3] < 59 and ballRanges[4] < 59 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20;
-  if (xPos > 110 or xPos < 40 and inRange) {
+  if (xPos > MAXIMUM_HAS_BALL_X or xPos < MINIMUM_HAS_BALL_X and inRange) {
     lostBallDueToPosition += 1;
-  } else if (xPos < 110 and xPos > 40 and inRange) {
+  } else if ((xPos < MAXIMUM_HAS_BALL_X and xPos > MINIMUM_HAS_BALL_X and inRange) or (not inRange)) {
     lostBallDueToPosition = 0;
   }
   
-  if (((xPos < 110 and xPos > 40) or lostBallDueToPosition < 4) and inRange) {
-    state = has_ball;
+  if (((xPos < MAXIMUM_HAS_BALL_X and xPos > MINIMUM_HAS_BALL_X) or lostBallDueToPosition < 4) and inRange) {
+    state = has_ball; 
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
   } else {
     state = invisible_ball;
+  }
+  
+  if (state != has_ball and millis() - lastHadBall > 1000) {
+    if (abs(motor.getRelativeAngle(0.0)) < 90) {
+      shouldKissForwards = true;
+    } else {
+      shouldKissForwards = false;
+    }
   }
 
   switch (state) {
@@ -95,15 +104,18 @@ void loop() {
       if (lastBallReadTime - millis() > 250) motor.stopMotors();
       //if (lastBallReadTime - millis() > 500) motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
       break;
-    case sees_ball:
-      if ((xPos >= 110 or xPos <= 40) and lostBallDueToPosition >= 4) ledWhite();
+    case sees_ball:  
+      if ((xPos >= MAXIMUM_HAS_BALL_X or xPos <= MINIMUM_HAS_BALL_X) and lostBallDueToPosition >= 4) ledYellow();
       else ledBlue();
       lastBallReadTime = millis();
-//      turnShoot();
       diagonalBall();
       break;
     case has_ball:
+      motor.stopMotors();
+      return;
+      
       ledGreen();
+      lastHadBall = millis();
       if (shouldKissForwards) {
         KISS();
       } else {
