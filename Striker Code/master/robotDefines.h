@@ -1,6 +1,6 @@
 //FROM MASTER
 #define MAX_SPEED 230.0
-#define DRIB_SPEED 80.0
+#define MAX_BACK_SPEED 120.0
 
 #define INTERRUPT_PIN 39
 #define SOLENOID_PIN 27
@@ -14,6 +14,8 @@
 
 #define FIELD_WIDTH 185
 #define FIELD_LENGTH 244
+
+#define PIVOT_K 4.0
 
 float ballAngle;
 float goalAngle;
@@ -84,10 +86,9 @@ float dodgeStartTime = 0.0;
 bool turningToShoot = false;
 
 //FROM STAGNANT FUNCTIONS
-#define X_ORIGIN_CALIBRATION 50.0 
-#define Y_ORIGIN_CALIBRATION 15.0 
+#define X_ORIGIN_CALIBRATION 30.0 
+#define Y_ORIGIN_CALIBRATION 5.0 
 #define PATH_CURVINESS 3.0
 #define TARGET_DIST_BEHIND_BALL 110.0
 #define VIDEO_WIDTH 640
 #define VIDEO_HEIGHT 480
-

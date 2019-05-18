@@ -37,6 +37,10 @@ void quadraticBall() {
 void diagonalBall() {
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
   float directToBallHeading = angleFromSlope(xPos/yPos);
-  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallHeading, min(MAX_SPEED, 
-  distanceFromBall));
+  if (distanceFromBall < 100) {
+    motor.dribble(255);
+  } else {
+    motor.dribble(0);
+  }
+  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallHeading, min(MAX_SPEED, distanceFromBall*1.2));
 }

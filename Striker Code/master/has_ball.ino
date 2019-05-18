@@ -1,34 +1,60 @@
+float lastShootTime = 0.0;
+
+float directionToTurn = 1.0;
+bool directionToTurnSet = false;
+
 void turnShoot() {
+  lastCalledTurnToShoot = millis();
+  
   if (goalAngle == 0.0) {
     motor.stopMotors();
     return;
   }
   
-  if (abs(goalAngle) > 5.0) {
-    if (goalAngle < 0) {
-      motor.driveToRelativeHeadingCorrected(80.0, 10.0, 200);
-    } else {
-      motor.driveToRelativeHeadingCorrected(-80.0, -10.0, 200);
+  float angle = motor.getRelativeAngle(0.0);
+  if (abs(angle) > 135) {
+    if (directionToTurnSet == false) {
+      leftSensor = lidars.readSensor2();
+      rightSensor = lidars.readSensor4();
+      if (leftSensor < rightSensor) {
+        directionToTurn = 1.0;
+      } else {
+        directionToTurn = -1.0;
+      }
+      directionToTurnSet = true;
     }
+  } else {
+    directionToTurn = 0.0;
+  }
+  
+  if (abs(goalAngle) > 7 and (millis() - lastShootTime > 200)) {
+    if (goalAngle < 0) {
+      if (directionToTurn != 0.0) {
+        motor.driveToRelativeHeadingCorrected(90.0*directionToTurn, 40.0*directionToTurn, min(abs(goalAngle)*PIVOT_K, 180));
+      } else {
+        motor.driveToRelativeHeadingCorrected(90.0, 40.0, min(abs(goalAngle)*PIVOT_K, 180));
+      }
+    } else {
+      if (directionToTurn != 0.0) {
+        motor.driveToRelativeHeadingCorrected(90.0*directionToTurn, 40.0*directionToTurn, min(abs(goalAngle)*PIVOT_K, 180));
+      } else {
+        motor.driveToRelativeHeadingCorrected(-90.0, -40.0, min(abs(goalAngle)*PIVOT_K, 180));
+      }
+   }
 //    motor.turnToRelativeHeading(goalAngle, 100);
     motor.dribble(255);
   } else {
     motor.stopMotors();
     shoot();
+    directionToTurn = 1.0;
+    directionToTurnSet = false;
     turningToShoot = false;
   }
 }
 
-float lastShootTime = 0.0;
 bool shoot() {
-  if (lastShootTime == 0) {
-    lastShootTime = millis();
-    digitalWrite(SOLENOID_PIN, HIGH);
-    delay(100);
-    motor.dribble(0);
-    digitalWrite(SOLENOID_PIN, LOW);
-    return true;
-  } else if (millis() - lastShootTime > 1000) {
+  Serial.println(state);
+  if ((lastShootTime == 0 or millis() - lastShootTime > 2000) and state == 0) {
     lastShootTime = millis();
     motor.dribble(0);
     digitalWrite(SOLENOID_PIN, HIGH);
@@ -227,10 +253,60 @@ void showAndShoot() {
   oldRightSensor = rightSensor;
 }
 
+bool shouldFixHeading = false;
+
+
+bool directionToTurnKISSSet = false;
+float directionToTurnKISS = 1.0;
+
 // Keep It Simple Stupid
 void KISS() {
-  if (goalAngle == 0) {
-    motor.dribble(255);
+  motor.dribble(255);
+
+  float goalDistance = sqrt(tPos*tPos + oPos*oPos);
+  if (goalAngle == 0 or goalDistance > 220) {
+    float angleError = motor.getRelativeAngle(0.0);
+    if (abs(angleError) > 30) {
+      shouldFixHeading = true;
+    }
+
+    Serial.println(angleError);
+    Serial.println(directionToTurnKISS);
+    Serial.println(directionToTurnKISSSet);
+    Serial.println(shouldFixHeading);
+    Serial.println("");
+    
+    if (abs(angleError) > 135) {
+      if (directionToTurnKISSSet == false) {
+        leftSensor = lidars.readSensor2();
+        rightSensor = lidars.readSensor4();
+        if (leftSensor < rightSensor) {
+          directionToTurnKISS = 1.0;
+        } else {
+          directionToTurnKISS = -1.0;
+        }
+        directionToTurnKISSSet = true;
+      }
+    } else {
+      directionToTurnKISS = 0.0;
+    }
+    
+    if (shouldFixHeading and abs(angleError) > 10) {
+      if (directionToTurnKISS != 0.0) {
+        motor.driveToRelativeHeadingCorrected(120.0*directionToTurnKISS, 40.0*directionToTurnKISS, 180);
+        return;
+      }
+      if (angleError > 0) {
+        motor.driveToRelativeHeadingCorrected(120.0, 40.0, 180);
+      } else {
+        motor.driveToRelativeHeadingCorrected(-120.0, -40.0, 180);
+      }
+      return;
+    } else if (shouldFixHeading and abs(angleError) <= 10) {
+      directionToTurnKISSSet = false;
+      directionToTurnKISS = 0.0;
+      shouldFixHeading = false;
+    }
     motor.driveToHeadingCorrected(0.0, 0.0, MAX_SPEED);
   } else {
     turnShoot();
@@ -238,9 +314,30 @@ void KISS() {
 }
 
 void KISSBackwards() {
+  motor.dribble(255);
+
   if (goalAngle == 0) {
-    motor.dribble(255);
-    motor.driveToHeadingCorrected(motor.getRelativeAngle(0.0), 180.0, MAX_SPEED);
+    frontDistIR = analogRead(FRONT_IR_PIN);
+    if (frontDistIR >= 200) {
+      shouldKissForwards = true;
+      return;
+    }
+    
+    float angleError = motor.getRelativeAngle(180);
+    if (abs(angleError) > 30) {
+      shouldFixHeading = true;
+    }
+    if (shouldFixHeading and abs(angleError) > 10) {
+      if (angleError > 0) {
+        motor.driveToRelativeHeadingCorrected(90.0, 40.0, min(abs(angleError)*PIVOT_K, 180));
+      } else {
+        motor.driveToRelativeHeadingCorrected(-90.0, -40.0, min(abs(angleError)*PIVOT_K, 180));
+      }
+      return;
+    } else if (shouldFixHeading and abs(angleError) <= 10) {
+      shouldFixHeading = false;
+    }
+    motor.driveToHeadingCorrected(motor.getRelativeAngle(0.0), 180.0, MAX_BACK_SPEED);
   } else {
     turnShoot();
   }

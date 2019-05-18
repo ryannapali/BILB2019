@@ -9,7 +9,7 @@ void getToGoal(){
   //drive towards goal
     motor.dribble(255);
     rightSensor = lidars.readSensor4();
-    motor.driveToHeadingCorrected(180+(100-rightSensor),180,DRIB_SPEED);
+    motor.driveToHeadingCorrected(180+(100-rightSensor),180,MAX_BACK_SPEED);
   }
   else if(far == false) readyToShoot = true;
 }
@@ -33,4 +33,3 @@ boolean farFromGoal(){
     return false;
   }
 }
-

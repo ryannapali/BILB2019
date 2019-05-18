@@ -138,6 +138,10 @@ void calculateAngles() {
   if (goalAngle >= 180) {
     goalAngle -= 360.0;
   }
+
+  if (oPos == 0 or tPos == 0) {
+    goalAngle = 0;
+  }
 }
 
 void updateTOFReadings() {
@@ -337,3 +341,9 @@ void flash(){
   delay(100);
 }
 
+void printBallPosition() {
+  Serial.println("Ball position: ");
+  Serial.println(xPos);
+  Serial.println(yPos);
+  Serial.println("");
+}

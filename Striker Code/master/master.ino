@@ -8,6 +8,8 @@ Adafruit_VL6180X vl = Adafruit_VL6180X();
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
 
+float lastCalledTurnToShoot = 0.0;
+
 void interrupt() {
   interrupted = true;
 }
@@ -50,9 +52,10 @@ void setup() {
   analogWrite(WHITEB_PIN,255);
 }
 
-void loop() {
+bool shouldKissForwards = false;
 
-  if (interrupted){
+void loop() {
+  if (interrupted and millis()-lastCalledTurnToShoot > 100) {
     int side = 0;
     int currentAngle = motor.getRelativeAngle(0.0);
     if(currentAngle > 45) side  = 90;
@@ -70,13 +73,13 @@ void loop() {
 
   // Monitoring hiccups in ball possession
   bool inRange = ballRanges[0] < 59 and ballRanges[1] < 59 and ballRanges[2] < 59 and ballRanges[3] < 59 and ballRanges[4] < 59 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20;
-  if (xPos > 130 or xPos < 40 and inRange) {
+  if (xPos > 110 or xPos < 40 and inRange) {
     lostBallDueToPosition += 1;
-  } else if (xPos < 130 and xPos > 40 and inRange) {
+  } else if (xPos < 110 and xPos > 40 and inRange) {
     lostBallDueToPosition = 0;
   }
   
-  if (((xPos < 130 and xPos > 40) or lostBallDueToPosition < 4) and inRange) {
+  if (((xPos < 110 and xPos > 40) or lostBallDueToPosition < 4) and inRange) {
     state = has_ball;
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
@@ -88,22 +91,24 @@ void loop() {
     case invisible_ball: 
       // Do something smarter here later
       motor.stopMotors(); 
-      //if (lastBallReadTime - millis() > 250) motor.stopMotors();
+      ledRed();
+      if (lastBallReadTime - millis() > 250) motor.stopMotors();
       //if (lastBallReadTime - millis() > 500) motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
       break;
     case sees_ball:
-      if ((xPos >= 130 or xPos <= 40) and lostBallDueToPosition >= 4) ledCyan();
+      if ((xPos >= 110 or xPos <= 40) and lostBallDueToPosition >= 4) ledWhite();
       else ledBlue();
       lastBallReadTime = millis();
+//      turnShoot();
       diagonalBall();
-      if(yPos < 200) motor.dribble(255);
-      else motor.dribble(0);
       break;
     case has_ball:
       ledGreen();
-      backSensor = lidars.readSensor3();
-      if(motor.getRelativeAngle(180) < 15 and backSensor < 80) shootToOpenGoal();
-      else getToGoal();
+      if (shouldKissForwards) {
+        KISS();
+      } else {
+        KISSBackwards();
+      }
       break;
   }
 }
