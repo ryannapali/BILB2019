@@ -54,7 +54,8 @@ void setup() {
 
 bool shouldKissForwards = false;
 float lastHadBall = 0.0;
-
+bool isOrbiting = false;
+int lostBallDueToTOF = 0;
 void loop() {
   if (interrupted and millis()-lastCalledTurnToShoot > 100) {
     int side = 0;
@@ -74,20 +75,30 @@ void loop() {
   
   // Monitoring hiccups in ball possession
   bool inRange = ballRanges[0] < 59 and ballRanges[1] < 59 and ballRanges[2] < 59 and ballRanges[3] < 59 and ballRanges[4] < 59 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20;
-  if (xPos > MAXIMUM_HAS_BALL_X or xPos < MINIMUM_HAS_BALL_X and inRange) {
+  bool ballInCameraRange = xPos < MAXIMUM_HAS_BALL_X and xPos > MINIMUM_HAS_BALL_X and yPos < MAXIMUM_HAS_BALL_Y and yPos > MINIMUM_HAS_BALL_Y; 
+  if (not ballInCameraRange and inRange) {
     lostBallDueToPosition += 1;
-  } else if ((xPos < MAXIMUM_HAS_BALL_X and xPos > MINIMUM_HAS_BALL_X and inRange) or (not inRange)) {
+  } else if ((ballInCameraRange and inRange) or (not inRange)) {
     lostBallDueToPosition = 0;
   }
+
+  if (inRange) {
+    lostBallDueToTOF = 0;
+  } else {
+    lostBallDueToTOF += 1;
+  }
   
-  if (((xPos < MAXIMUM_HAS_BALL_X and xPos > MINIMUM_HAS_BALL_X) or lostBallDueToPosition < 4) and inRange) {
+  if ((ballInCameraRange or lostBallDueToPosition < 10) and (inRange or lostBallDueToTOF < 10)) {
     state = has_ball; 
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
   } else {
     state = invisible_ball;
   }
-  
+
+  if (state != has_ball) {
+    isOrbiting = false;
+  }
   if (state != has_ball and millis() - lastHadBall > 1000) {
     if (abs(motor.getRelativeAngle(0.0)) < 90) {
       shouldKissForwards = true;
@@ -99,22 +110,19 @@ void loop() {
   switch (state) {
     case invisible_ball: 
       // Do something smarter here later
-      motor.stopMotors(); 
       ledRed();
-      if (lastBallReadTime - millis() > 250) motor.stopMotors();
-      //if (lastBallReadTime - millis() > 500) motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
+      if (millis() - lastBallReadTime > 0) motor.stopMotors();
+      if (millis() - lastBallReadTime > 1000) motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
       break;
     case sees_ball:  
-      if ((xPos >= MAXIMUM_HAS_BALL_X or xPos <= MINIMUM_HAS_BALL_X) and lostBallDueToPosition >= 4) ledYellow();
+      if (not ballInCameraRange and lostBallDueToPosition >= 4) ledYellow();
       else ledBlue();
       lastBallReadTime = millis();
       diagonalBall();
       break;
     case has_ball:
-      motor.stopMotors();
-      return;
+      ledGreen(); 
       
-      ledGreen();
       lastHadBall = millis();
       if (shouldKissForwards) {
         KISS();

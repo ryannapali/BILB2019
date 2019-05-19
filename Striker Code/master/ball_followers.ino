@@ -42,5 +42,9 @@ void diagonalBall() {
   } else {
     motor.dribble(0);
   }
-  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallHeading, min(MAX_SPEED, distanceFromBall*1.2));
+
+  float directToBallTurnHeading = min(abs(directToBallHeading), 35.0);
+  if (directToBallHeading < 0) directToBallTurnHeading *= -1.0;
+
+  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallTurnHeading*0.8, min(max(distanceFromBall, 60), MAX_SPEED));
 }

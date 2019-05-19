@@ -1,5 +1,5 @@
-#define MAX_SPEED 230.0
-#define MAX_BACK_SPEED 120.0
+#define MAX_SPEED 200.0
+#define MAX_BACK_SPEED 70.0
 
 #define INTERRUPT_PIN 39
 #define SOLENOID_PIN 27
@@ -15,8 +15,10 @@
 #define FIELD_WIDTH 185
 #define FIELD_LENGTH 244
 
-#define MINIMUM_HAS_BALL_X 40
-#define MAXIMUM_HAS_BALL_X 70
+#define MINIMUM_HAS_BALL_X 35
+#define MAXIMUM_HAS_BALL_X 65
+#define MINIMUM_HAS_BALL_Y -25
+#define MAXIMUM_HAS_BALL_Y 30
 
 #define PIVOT_K 4.0
 

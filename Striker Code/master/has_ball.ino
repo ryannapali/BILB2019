@@ -30,18 +30,17 @@ void turnShoot() {
   if (abs(goalAngle) > 7 and (millis() - lastShootTime > 200)) {
     if (goalAngle < 0) {
       if (directionToTurn != 0.0) {
-        motor.driveToRelativeHeadingCorrected(90.0*directionToTurn, 40.0*directionToTurn, min(abs(goalAngle)*PIVOT_K, 180));
+        motor.driveToRelativeHeadingCorrected(80.0*directionToTurn, 40.0*directionToTurn, min(abs(goalAngle)*PIVOT_K, 180));
       } else {
-        motor.driveToRelativeHeadingCorrected(90.0, 40.0, min(abs(goalAngle)*PIVOT_K, 180));
+        motor.driveToRelativeHeadingCorrected(80.0, 40.0, min(abs(goalAngle)*PIVOT_K, 180));
       }
     } else {
       if (directionToTurn != 0.0) {
-        motor.driveToRelativeHeadingCorrected(90.0*directionToTurn, 40.0*directionToTurn, min(abs(goalAngle)*PIVOT_K, 180));
+        motor.driveToRelativeHeadingCorrected(80.0*directionToTurn, 40.0*directionToTurn, min(abs(goalAngle)*PIVOT_K, 180));
       } else {
-        motor.driveToRelativeHeadingCorrected(-90.0, -40.0, min(abs(goalAngle)*PIVOT_K, 180));
+        motor.driveToRelativeHeadingCorrected(-80.0, -40.0, min(abs(goalAngle)*PIVOT_K, 180));
       }
    }
-//    motor.turnToRelativeHeading(goalAngle, 100);
     motor.dribble(255);
   } else {
     motor.stopMotors();
@@ -64,14 +63,6 @@ bool shoot() {
     return false;
   }
 }
-//
-//bool needsToTurn = false;
-//
-//bool lateralReadingsValid = false;
-//bool verticalReadingsValid = false;
-//
-//float persistentGoalAngleForShow = 0.0;
-//float verticalDistance = 20.0;
 
 bool shouldFixHeading = false;
 
@@ -145,7 +136,6 @@ void KISS() {
   }
 }
 
-bool isOrbiting = false;
 float backDistIR = 0.0;
 float orbitingConstant = 1.0;
 
@@ -153,40 +143,49 @@ void KISSBackwards() {
   motor.dribble(255);
 
   float goalDistance = sqrt(tPos*tPos + oPos*oPos);
-
+  Serial.print("goal distance: ");
+  Serial.println(goalDistance);
+  Serial.print("turning to shoot: ");
+  Serial.println(turningToShoot);
+  Serial.print("relative goal angle: ");
+  Serial.println(motor.getRelativeAngle(goalAngle));
+  Serial.print("shouldKissForwards: ");
+  Serial.println(shouldKissForwards);
+  Serial.print("isOrbiting: ");
+  Serial.println(isOrbiting);
   if (goalAngle == 0 or (goalDistance > MAXIMUM_SHOT_DISTANCE and turningToShoot == false)) {
     turningToShoot = false;
 
+    float angleError = motor.getRelativeAngle(180);
+
     // Handle robot chasing our ball/dribbler as we're moving backwards
     frontDistIR = analogRead(FRONT_IR_PIN);
-    if (frontDistIR >= 200) {
+    if (frontDistIR >= 200 and abs(angleError) < 45) {
       shouldKissForwards = true;
       return;
     }
 
     // Handle robot behind us as we're moving backwards
-    if (isOrbiting) {
-      orbitEnemy();
-      return;
-    }
-
-    float angleError = motor.getRelativeAngle(180);
+//    if (isOrbiting) {
+//      orbitEnemy();
+//      return;
+//    }
 
     // Decide which direction to orbit
-    backDistIR = analogRead(BACK_IR_PIN);
-    if (backDistIR >= 200 and abs(angleError) < 45) {
-      isOrbiting = true;
-      leftSensor = lidars.readSensor2();
-      rightSensor = lidars.readSensor4();
-      if (leftSensor > rightSensor) {
-        orbitingConstant = 1.0;
-      } else {
-        orbitingConstant = -1.0;
-      }
-      return;
-    }
+//    backDistIR = analogRead(BACK_IR_PIN);
+//    if (backDistIR >= 200 and abs(angleError) < 45) {
+//      isOrbiting = true;
+//      leftSensor = lidars.readSensor2();
+//      rightSensor = lidars.readSensor4();
+//      if (leftSensor > rightSensor) {
+//        orbitingConstant = 1.0;
+//      } else {
+//        orbitingConstant = -1.0;
+//      }
+//      return;
+//    }
     
-    if (abs(angleError) > 30) {
+    if (abs(angleError) > 35) {
       shouldFixHeading = true;
     }
 
@@ -201,8 +200,8 @@ void KISSBackwards() {
     } else if (shouldFixHeading and abs(angleError) <= 10) {
       shouldFixHeading = false;
     }
-    
-    motor.driveToHeadingCorrected(motor.getRelativeAngle(goalAngle), 180.0, MAX_BACK_SPEED);
+
+    motor.driveToHeadingCorrected(180.0, 180.0, MAX_BACK_SPEED);
   } else {
     if (goalDistance <= MAXIMUM_SHOT_DISTANCE and turningToShoot == false) {
       turningToShoot = true;
@@ -424,3 +423,11 @@ bool hasRotated = false;
 //    isExecutingForwardSpinMove = false;
 //  }
 //}
+
+//bool needsToTurn = false;
+//
+//bool lateralReadingsValid = false;
+//bool verticalReadingsValid = false;
+//
+//float persistentGoalAngleForShow = 0.0;
+//float verticalDistance = 20.0;
