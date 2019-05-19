@@ -215,22 +215,151 @@ void ledRed(){
 
 bool gyroSet = false;
 void checkForIMUZero() {
-  Serial.println("imuing");
   int val = 0;
   val = digitalRead(BUTTON_PIN);
   if (val == LOW) {
-        Serial.println("resetting Gyro 1");
+    Serial.println("RESETTING");
     motor.resetGyro();
     gyroSet = true;
   }
-  else analogWrite(28,0);
+  else analogWrite(WHITEA_PIN,0);
 
   if (gyroSet) {
-           Serial.println("resetting Gyro 2");
-   analogWrite(28,255);
+   analogWrite(WHITEA_PIN,255);
    gyroSet=false;
   } else {
-   analogWrite(28,0);
+   analogWrite(WHITEA_PIN,0);
   }
 }
 
+void updateBallMotion(){
+  if((lastXPos - xPos > 2) or (lastYPos - yPos > 2)) timeSinceBallMoved = millis();
+  if(millis() - timeSinceBallMoved > 3000){
+    if(attackMode==false) attackModeStart = millis();
+    attackMode = true;
+  }
+}
+
+void fixOutOfBounds(int side) {
+    logLIDARS();
+    int slowerSpeed = 100; 
+  
+    if (abs(motor.getRelativeAngle(side)) < 5 or turnFixed) {
+      turnFixed = true;
+      
+      frontSensor = lidars.readSensor1();
+      backSensor = lidars.readSensor3();
+      leftSensor = lidars.readSensor2();
+      rightSensor = lidars.readSensor4();
+  
+      float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
+  
+      if (frontSensor <= minReading and frontSensor < 45) {
+        if (backSensor < 36) {
+          if (leftSensor < rightSensor) {
+            motor.driveToHeadingCorrected(90, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(270, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
+        }
+        return;
+      } else if (backSensor <= minReading and backSensor < 36) {
+        if (frontSensor < 36) {
+          if (leftSensor < rightSensor) {
+            motor.driveToHeadingCorrected(90, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(270, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
+        }
+        return;
+      } else if (rightSensor <= minReading and rightSensor < 45) {
+        if (leftSensor < 36) {
+          if (frontSensor < backSensor) {
+            motor.driveToHeadingCorrected(-180, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(0, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
+        }
+        return;
+      } else if (leftSensor <= minReading and leftSensor < 45) {
+        if (rightSensor < 36) {
+          if (frontSensor < backSensor) {
+            motor.driveToHeadingCorrected(-180, 0, slowerSpeed);
+          } else {
+            motor.driveToHeadingCorrected(0, 0, slowerSpeed);
+          }
+        } else {
+          motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
+        }
+        return;
+      } else {
+        motor.stopMotors();
+        interrupted = false;
+        turnFixed = false;
+      }
+    } else {
+      motor.turnToAbsoluteHeading(side, MAX_SPEED);
+  }
+}
+
+void logLIDARS() {
+  Serial.print("front: ");
+  Serial.println(frontSensor);
+  Serial.print("right: ");
+  Serial.println(rightSensor);
+  Serial.print("back: ");
+  Serial.println(backSensor);
+  Serial.print("left: ");
+  Serial.println(leftSensor);
+}
+
+void flash(){
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+  analogWrite(WHITEB_PIN,255);
+  analogWrite(WHITEA_PIN,255);
+  delay(100);
+  analogWrite(WHITEB_PIN,0);
+  analogWrite(WHITEA_PIN,0);
+  delay(100);
+}

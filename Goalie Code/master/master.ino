@@ -12,6 +12,8 @@
 #define BLUE_PIN 21
 #define GREEN_PIN 22
 #define RED_PIN 23
+#define WHITEA_PIN 17
+#define WHITEB_PIN 28
 
 
 Adafruit_VL6180X vl = Adafruit_VL6180X();
@@ -29,12 +31,18 @@ float xPos = 1;
 float yPos = 1;
 float oldXPos = 0.0;
 float oldYPos = 0.0;
+float lastXPos = 0.0;
+float lastYPos = 0.0;
 int failedBallReadingCount = 0;
 float tPos = 1;
 float oPos = 1;
 float oldTPos = 0.0;
 float oldOPos = 0.0;
 int failedGoalReadingCount = 0;
+
+float timeSinceBallMoved = 0.0;
+boolean attackMode = false;
+float attackModeStart = 0.0;
 
 float frontSensor;
 float backSensor;
@@ -44,11 +52,14 @@ float rightSensor;
 float sideSum = 0.0;
 boolean sideSumConfident = false;
 
-bool interrupted = false;
 bool turnFixed = false;
+bool interrupted = false;
+
+void interrupt() {
+  interrupted = true;
+}
 
 void setup() {
-  float proportionals[] = {sin(-3.14 + 3.92699082), sin(-3.14 + 5.28834763), sin(-3.14 + 0.994837674), sin(-3.14 + 2.35619449)};
   Serial5.begin(19200);
   Serial.begin(115200);
   delay(600);
@@ -59,6 +70,8 @@ void setup() {
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN,OUTPUT);
+
+  flash();
   
   motor.imuInit();
 //  if (! vl.begin()) {
@@ -67,24 +80,34 @@ void setup() {
 //
 //    while (1);
 //  }
-    Serial.println("start imu");
+  Serial.println("start imu");
   while(motor.isCalibrated()==false){
-      analogWrite(28,0);
+      analogWrite(WHITEB_PIN,0);
   }
   Serial.println("done imu");
-  analogWrite(28,255);
-  delay(300);
-  analogWrite(28,0);
+  analogWrite(WHITEB_PIN,255);
 
 }
 
 void loop() {
-  Serial.println("doing");
+  if (interrupted > 100) {
+    int side = 0;
+    int currentAngle = motor.getRelativeAngle(0.0);
+    if(currentAngle > 45) side  = 90;
+    if(currentAngle > 135) side  = 180;
+    if(currentAngle < -45) side  = 270;
+    if(currentAngle < -135) side  = 180;
+    fixOutOfBounds(side);
+    return;
+  }
+  
+  lastXPos = xPos;
+  lastYPos = yPos;
   checkForIMUZero();
-  Serial.println("doing 1");
   getCameraReadings();
   calculateAngles();
   checkFieldReorient();
+  updateBallMotion();
 
   if (false) { //reimplement
     state = has_ball;
@@ -101,16 +124,16 @@ void loop() {
       break;
     case sees_ball:
       ledGreen();
-      blockBall();
+      if(attackMode){
+        if(millis()-attackModeStart > 2000) attackMode = false;
+        diagonalBall();
+      }
+      else{
+        attackMode = false;
+        blockBall();
+      }
       break;
     case has_ball:
-//      passBall();
       break;
   }
-    Serial.println("doing 4");
-
-}
-
-void interrupt() {
-  interrupted = true;
 }
