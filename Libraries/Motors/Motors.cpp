@@ -315,7 +315,7 @@ float adjustedAngle = angle - 180;
     
     float relativeAngle = getRelativeAngle(targetOrientation);
     float turningPower = 2.5*relativeAngle/180.0;
-    float distancePower = 0.7*distanceOff;
+    float distancePower = 2.5*distanceOff;
     
     float rad = getRad(adjustedAngle);
     float proportionals[] = {sin(-rad + 3.92699082) + turningPower, sin(-rad + 5.4977871438) + turningPower,

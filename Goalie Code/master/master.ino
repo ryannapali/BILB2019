@@ -9,9 +9,11 @@
 #define FIELD_WIDTH 78
 #define FIELD_LENGTH 105
 #define LIDAR_GOAL 
-#define BLUE_PIN 9
-#define GREEN_PIN 10
-#define RED_PIN 14
+#define BLUE_PIN 21
+#define GREEN_PIN 22
+#define RED_PIN 23
+#define WHITEA_PIN 17
+#define WHITEB_PIN 28
 
 
 Adafruit_VL6180X vl = Adafruit_VL6180X();
@@ -29,6 +31,8 @@ float xPos = 1;
 float yPos = 1;
 float oldXPos = 0.0;
 float oldYPos = 0.0;
+float lastXPos = 0.0;
+float lastYPos = 0.0;
 int failedBallReadingCount = 0;
 float tPos = 1;
 float oPos = 1;
@@ -36,21 +40,29 @@ float oldTPos = 0.0;
 float oldOPos = 0.0;
 int failedGoalReadingCount = 0;
 
+float timeSinceBallMoved = 0.0;
+boolean attackMode = false;
+float attackModeStart = 0.0;
+
 float frontSensor;
 float backSensor;
 float leftSensor;
 float rightSensor;
 
 float sideSum = 0.0;
-boolean sideSumConfidant = false;
+boolean sideSumConfident = false;
 
-bool interrupted = false;
 bool turnFixed = false;
+bool interrupted = false;
+
+void interrupt() {
+  interrupted = true;
+}
 
 void setup() {
-  float proportionals[] = {sin(-3.14 + 3.92699082), sin(-3.14 + 5.28834763), sin(-3.14 + 0.994837674), sin(-3.14 + 2.35619449)};
   Serial5.begin(19200);
   Serial.begin(115200);
+  delay(600);
   pinMode(INTERRUPT_PIN, INPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -58,18 +70,45 @@ void setup() {
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN,OUTPUT);
+
+  flash();
   
   motor.imuInit();
-  if (! vl.begin()) {
-    Serial.println("Failed to find TOF sensor");
-    while (1);
+//  if (! vl.begin()) {
+//    Serial.println("Failed to find TOF sensor");
+//          analogWrite(28,100);
+//
+//    while (1);
+//  }
+  Serial.println("start imu");
+  while(motor.isCalibrated()==false){
+      analogWrite(WHITEB_PIN,0);
   }
+  Serial.println("done imu");
+  analogWrite(WHITEB_PIN,255);
+
 }
 
 void loop() {
+  if (interrupted > 100) {
+    int side = 0;
+    int currentAngle = motor.getRelativeAngle(0.0);
+    if(currentAngle > 45) side  = 90;
+    if(currentAngle > 135) side  = 180;
+    if(currentAngle < -45) side  = 270;
+    if(currentAngle < -135) side  = 180;
+    fixOutOfBounds(side);
+    return;
+  }
+  
+  lastXPos = xPos;
+  lastYPos = yPos;
+  checkForIMUZero();
   getCameraReadings();
   calculateAngles();
   checkFieldReorient();
+  updateBallMotion();
+
   if (false) { //reimplement
     state = has_ball;
   } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
@@ -77,22 +116,24 @@ void loop() {
   } else {
     state = invisible_ball;
   }
-  
+
   switch (state) {
     case invisible_ball: 
+      ledRed();
       centerToGoal();
-      ledCyan();
       break;
     case sees_ball:
-      blockBall();
-      ledYellow();
+      ledGreen();
+      if(attackMode){
+        if(millis()-attackModeStart > 2000) attackMode = false;
+        diagonalBall();
+      }
+      else{
+        attackMode = false;
+        blockBall();
+      }
       break;
     case has_ball:
-//      passBall();
       break;
   }
-}
-
-void interrupt() {
-  interrupted = true;
 }
