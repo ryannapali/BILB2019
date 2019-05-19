@@ -2,6 +2,11 @@
 #define Y_ORIGIN_CALIBRATION -10.0 
 #define PATH_CURVINESS 3.0
 #define TARGET_DIST_BEHIND_BALL 110.0
+#define xDimension 480;
+#define yDimension 240;
+
+
+
 
 float dumpLidarData(){
   //frontSensor = lidars.readSensor1();
@@ -91,7 +96,7 @@ void getCameraReadings() {
   oPos = word(highChar4, lowChar4);
   
   if (xPos != 0) {
-    xPos -= 640.0;
+    xPos -= xDimension;
     xPos *= -1.0;
     xPos += X_ORIGIN_CALIBRATION;
     oldXPos = xPos;
@@ -104,7 +109,7 @@ void getCameraReadings() {
   }
 
   if (yPos != 0) {
-    yPos -= 480.0;
+    yPos -= yDimension;
     yPos += Y_ORIGIN_CALIBRATION;
     oldYPos = yPos;
   } else if (failedBallReadingCount < 4) {
@@ -112,7 +117,7 @@ void getCameraReadings() {
   }
 
   if (tPos != 0) {
-    tPos -= 640;
+    tPos -= xDimension;
     tPos *= -1;
     oldTPos = tPos;
     failedGoalReadingCount = 0;
@@ -124,7 +129,7 @@ void getCameraReadings() {
   }  
   
   if (oPos != 0) {
-    oPos -= 480;
+    oPos -= yDimension;
   } else if (failedGoalReadingCount < 4) {
     oPos = oldOPos;
   }
@@ -206,3 +211,26 @@ void ledRed(){
   analogWrite(BLUE_PIN,0);
   analogWrite(GREEN_PIN,255);
 }
+
+
+bool gyroSet = false;
+void checkForIMUZero() {
+  Serial.println("imuing");
+  int val = 0;
+  val = digitalRead(BUTTON_PIN);
+  if (val == LOW) {
+        Serial.println("resetting Gyro 1");
+    motor.resetGyro();
+    gyroSet = true;
+  }
+  else analogWrite(28,0);
+
+  if (gyroSet) {
+           Serial.println("resetting Gyro 2");
+   analogWrite(28,255);
+   gyroSet=false;
+  } else {
+   analogWrite(28,0);
+  }
+}
+
