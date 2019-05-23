@@ -8,16 +8,15 @@ Adafruit_VL6180X vl = Adafruit_VL6180X();
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
 
-float lastCalledTurnToShoot = 0.0;
-
 void interrupt() {
   interrupted = true;
 }
 
 void setup() {  
-  Serial5.begin(19200);m
+  Serial5.begin(19200);
   Serial.begin(115200);
 
+  // For imu problems
   delay(600);
 
   pinMode(INTERRUPT_PIN, INPUT);
@@ -44,6 +43,7 @@ void setup() {
     Serial.println("Failed to find TOF sensor");
     while (1);
   }
+  
   Serial.println("start imu");
   while(motor.isCalibrated()==false){
       analogWrite(WHITEB_PIN,0);
@@ -52,10 +52,6 @@ void setup() {
   analogWrite(WHITEB_PIN,255);
 }
 
-bool shouldKissForwards = false;
-float lastHadBall = 0.0;
-bool isOrbiting = false;
-int lostBallDueToTOF = 0;
 void loop() {
   if (interrupted and millis()-lastCalledTurnToShoot > 100) {
     int side = 0;
@@ -111,8 +107,8 @@ void loop() {
     case invisible_ball: 
       // Do something smarter here later
       ledRed();
-      if (millis() - lastBallReadTime > 0) motor.stopMotors();
-      if (millis() - lastBallReadTime > 1000) motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
+      if (millis() - lastBallReadTime > 1000) centerRobot();
+      else if (millis() - lastBallReadTime > 0) motor.stopMotors();  
       break;
     case sees_ball:  
       if (not ballInCameraRange and lostBallDueToPosition >= 4) ledYellow();
@@ -131,4 +127,38 @@ void loop() {
       }
       break;
   }
+}
+
+float lastLeft = 0.0;
+float lastRight = 0.0;
+
+void centerRobot() {
+  backSensor = lidars.readSensor3();
+  leftSensor = lidars.readSensor2();
+  rightSensor = lidars.readSensor4();
+  float sideSum = leftSensor + rightSensor;
+
+  lastLeft = leftSensor;
+  lastRight = rightSensor;
+  
+  float distanceFromGoal = 90.0;
+  float centerDistance = 93.0;
+  float distanceOff = backSensor-distanceFromGoal;
+
+  bool sideSumConfident = (abs(sideSum-185) < 10);
+  if (not sideSumConfident) {
+    if (abs(lastLeft - leftSensor) < 4) {
+      rightSensor = lastRight + lastLeft - leftSensor;
+    } else if (abs(lastRight - rightSensor) < 4) {
+      leftSensor = lastLeft + lastRight - rightSensor;
+    } else {
+      motor.stopMotors();
+      return;
+    }
+  }
+  
+  if (abs(motor.getRelativeAngle(0.0)) > 5) motor.turnToAbsoluteHeading(0.0, MAX_SPEED);
+  else if (abs(leftSensor - centerDistance) > 3) motor.driveToHeadingCorrectedHoldDistance(270, 0, 4.0*(leftSensor-centerDistance), distanceOff);
+  else if (abs(rightSensor - centerDistance) > 3) motor.driveToHeadingCorrectedHoldDistance(90, 0, 4.0*(rightSensor-centerDistance), distanceOff);
+  else motor.stopMotors();
 }

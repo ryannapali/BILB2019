@@ -2,12 +2,6 @@ void quadraticBall() {
   float theta = -motor.getRelativeAngle(0.0)/180.0*PI;
   float rotatedYPos = cos(theta)*yPos - sin(theta)*xPos;
   float rotatedXPos = sin(theta)*yPos + cos(theta)*xPos;
-
-  Serial.print("Ball xPos: ");
-  Serial.println(xPos);
-  Serial.print("Ball yPos: ");
-  Serial.println(yPos);
-  Serial.println("");
   
   if (millis() - coneSizeIncreaseTime > 2000) {
     coneSize = 2.5;
@@ -46,5 +40,5 @@ void diagonalBall() {
   float directToBallTurnHeading = min(abs(directToBallHeading), 35.0);
   if (directToBallHeading < 0) directToBallTurnHeading *= -1.0;
 
-  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallTurnHeading*0.8, min(max(distanceFromBall, 60), MAX_SPEED));
+  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallTurnHeading*0.8, min(max(distanceFromBall, 75), MAX_SPEED));
 }

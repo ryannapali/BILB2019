@@ -173,7 +173,7 @@ void fixOutOfBounds(int side) {
       float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
   
       if (frontSensor <= minReading and frontSensor < 45) {
-        if (backSensor < 36) {
+        if (backSensor < 45) {
           if (leftSensor < rightSensor) {
             motor.driveToHeadingCorrected(90, 0, slowerSpeed);
           } else {
@@ -183,8 +183,8 @@ void fixOutOfBounds(int side) {
           motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
         }
         return;
-      } else if (backSensor <= minReading and backSensor < 36) {
-        if (frontSensor < 36) {
+      } else if (backSensor <= minReading and backSensor < 45) {
+        if (frontSensor < 45) {
           if (leftSensor < rightSensor) {
             motor.driveToHeadingCorrected(90, 0, slowerSpeed);
           } else {
@@ -195,7 +195,7 @@ void fixOutOfBounds(int side) {
         }
         return;
       } else if (rightSensor <= minReading and rightSensor < 45) {
-        if (leftSensor < 36) {
+        if (leftSensor < 45) {
           if (frontSensor < backSensor) {
             motor.driveToHeadingCorrected(-180, 0, slowerSpeed);
           } else {
@@ -206,7 +206,7 @@ void fixOutOfBounds(int side) {
         }
         return;
       } else if (leftSensor <= minReading and leftSensor < 45) {
-        if (rightSensor < 36) {
+        if (rightSensor < 45) {
           if (frontSensor < backSensor) {
             motor.driveToHeadingCorrected(-180, 0, slowerSpeed);
           } else {

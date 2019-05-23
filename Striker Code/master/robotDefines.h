@@ -1,4 +1,4 @@
-#define MAX_SPEED 200.0
+#define MAX_SPEED 230.0
 #define MAX_BACK_SPEED 70.0
 
 #define INTERRUPT_PIN 39
@@ -29,9 +29,19 @@ float ballAngle;
 float goalAngle;
 int ballRanges [5] = {100, 100, 100, 100, 100};
 
+float lastCalledTurnToShoot = 0.0;
+
+float lastChangedStrategy = 0.0;
+
+float lastHadBall = 0.0;
+
+float lastShootTime = 0.0;
+
 float lastBallReadTime = 0.0;
 int lostBallDueToPosition = 0;
+int lostBallDueToTOF = 0;
 
+bool shouldKissForwards = false;
 
 enum State { has_ball, sees_ball, invisible_ball};
 State state = invisible_ball;

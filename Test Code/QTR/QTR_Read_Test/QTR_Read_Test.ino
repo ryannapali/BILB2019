@@ -16,7 +16,7 @@ void loop() {
 //  Serial.print(analogRead(A3)); //back
 //  Serial.println(" ");
 
-  if (min(min(min(1000, analogRead(A1)), analogRead(A2)), analogRead(A3)) < 100) {
+  if (min(min(min(1000, analogRead(A1)), analogRead(A2)), analogRead(A3)) < 600) {
     digitalWrite(4, HIGH);
     digitalWrite(13, HIGH);
   } else {
