@@ -1,29 +1,4 @@
-#define X_ORIGIN_CALIBRATION 30.0
-#define Y_ORIGIN_CALIBRATION -10.0
-#define PATH_CURVINESS 3.0
-#define TARGET_DIST_BEHIND_BALL 110.0
-#define xDimension 640/2;
-#define yDimension 480/2;
 
-
-float dumpLidarData() {
-  //frontSensor = lidars.readSensor1();
-  //delay(5);
-  backSensor = lidars.readSensor1();
-  delay(5);
-  //delay(5);
-  //leftSensor = lidars.readSensor2();
-  //delay(5);
-  //rightSensor = lidars.readSensor4();
-  //Serial.println(frontSensor);
-  if (backSensor != -2) {
-    Serial.println(backSensor);
-    return backSensor;
-  }
-  else return 0;
-  //Serial.println(leftSensor);
-  //Serial.println(rightSensor);
-}
 
 float getPathSlope() {
   if (xPos < 0) {
@@ -58,6 +33,10 @@ void clearCameraBuffer() {
 }
 
 void getCameraReadings() {
+  float oldXPos = 0.0;
+  float oldYPos = 0.0;
+  float oldTPos = 0.0;
+  float oldOPos = 0.0;
   char lc = Serial5.read();
   long bTimer = millis();
   while (word(0, lc) != 254) {
@@ -133,80 +112,6 @@ void getCameraReadings() {
   }
 }
 
-
-void calculateAngles() {
-  // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
-  if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
-    ballAngle = 2000;
-  } else {
-    double m = (float)(yPos) / (float)(xPos);
-    ballAngle = atan((double)m);
-    ballAngle *= 57.2957795129;
-    if (xPos < 0) {
-      ballAngle += 180;
-    } else if (yPos < 0) {
-      ballAngle += 360;
-    }
-
-    if (m == .75) {
-      ballAngle = 2000; //ballAngle = 2000 when robot doesn't see ball
-    }
-  }
-  Serial.println(ballAngle);
-  if (tPos > 1280 || oPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
-    goalAngle = 2000;
-  } else {
-    double m = (float)(oPos) / (float)(tPos);
-    goalAngle = atan((double)m);
-    goalAngle *= 57.2957795129;
-    if (tPos < 0) {
-      goalAngle += 180;
-    } else if (oPos < 0) {
-      goalAngle += 360;
-    }
-    if (m == .75) {
-      goalAngle = 2000; //goalAngle = 2000 when robot doesn't see goal
-    }
-  }
-}
-
-void ledWhite() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(BLUE_PIN, 0);
-  analogWrite(GREEN_PIN, 0);
-}
-void ledYellow() {
-  analogWrite(RED_PIN, 255);
-  analogWrite(BLUE_PIN, 0);
-  analogWrite(GREEN_PIN, 0);
-}
-void ledCyan() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(BLUE_PIN, 255);
-  analogWrite(GREEN_PIN, 0);
-}
-void ledMagenta() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(BLUE_PIN, 0);
-  analogWrite(GREEN_PIN, 255);
-}
-void ledGreen() {
-  analogWrite(RED_PIN, 255);
-  analogWrite(BLUE_PIN, 255);
-  analogWrite(GREEN_PIN, 0);
-}
-void ledBlue() {
-  analogWrite(RED_PIN, 0);
-  analogWrite(BLUE_PIN, 255);
-  analogWrite(GREEN_PIN, 255);
-}
-void ledRed() {
-  analogWrite(RED_PIN, 255);
-  analogWrite(BLUE_PIN, 0);
-  analogWrite(GREEN_PIN, 255);
-}
-
-
 bool gyroSet = false;
 void checkForIMUZero() {
   int val = 0;
@@ -227,13 +132,6 @@ void checkForIMUZero() {
   calibrating = false;
 }
 
-void updateBallMotion() {
-  if ((lastXPos - xPos > 2) or (lastYPos - yPos > 2)) timeSinceBallMoved = millis();
-  if (millis() - timeSinceBallMoved > 3000) {
-    if (attackMode == false) attackModeStart = millis();
-    attackMode = true;
-  }
-}
 
 void logLIDARS() {
   Serial.print("front: ");
@@ -246,57 +144,7 @@ void logLIDARS() {
   Serial.println(leftSensor);
 }
 
-void flash() {
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-  analogWrite(WHITEB_PIN, 255);
-  analogWrite(WHITEA_PIN, 255);
-  delay(100);
-  analogWrite(WHITEB_PIN, 0);
-  analogWrite(WHITEA_PIN, 0);
-  delay(100);
-}
-
-
-//________________________________
-
-
-
-void calculateAngles2() {
+void calculateAngles() {
   // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
   if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
     ballAngle = 2000;
@@ -330,13 +178,9 @@ void calculateAngles2() {
       goalAngle = 2000; //goalAngle = 2000 when robot doesn't see goal
     }
   }
-
-  if (goalAngle >= 180) {
-    goalAngle -= 360;
-  }
 }
 
-
+//not used
 boolean fastmovingBall() {
   int ballSpeeds[10];
   int ballSpeed;
@@ -347,7 +191,6 @@ boolean fastmovingBall() {
       ballSpeed += abs(ballSpeeds[i] - ballSpeeds[i - 1]);
     }
   }
-  if(ballSpeed > 26) return true;
+  if (ballSpeed > 26) return true;
   else return false;
 }
-

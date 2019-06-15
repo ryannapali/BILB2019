@@ -1,3 +1,7 @@
+void interrupt() {
+  if (!calibrating) interrupted = true;
+}
+
 void getInBounds() {
   int slowerSpeed = 100;
   motor.stopMotors();
@@ -6,7 +10,7 @@ void getInBounds() {
     backSensor = lidars.readSensor3();
     leftSensor = lidars.readSensor2();
     rightSensor = lidars.readSensor4();
-    
+
     int x = 0;
     int y = 0;
     boolean isClear = true;
@@ -20,14 +24,14 @@ void getInBounds() {
     if (!b) y++, isClear = false;
     if (x == 0 && y == 0) {
       Serial.println("spin to goal");
-      if (backSensor > 120 ){
-          motor.driveToHeadingCorrected(180, 0, slowerSpeed);
+      if (backSensor > 120 ) {
+        motor.driveToHeadingCorrected(180, 0, slowerSpeed);
       }
-       else if (frontSensor > 120 ){
-          motor.driveToHeadingCorrected(0, 0, slowerSpeed);
+      else if (frontSensor > 120 ) {
+        motor.driveToHeadingCorrected(0, 0, slowerSpeed);
       }
     } else {
-      
+
       Serial.println("moving away");
       int ang = xyToAngle(x, y);
       Serial.print("Angle : ");
@@ -35,7 +39,7 @@ void getInBounds() {
       motor.driveToHeadingCorrected(ang, 0, slowerSpeed);
     }
 
-    if (isClear){
+    if (isClear) {
       motor.stopMotors();
       interrupted = false;
       break;
@@ -100,7 +104,6 @@ int xyToAngle(int x, int y) {
     return 225;
   }
 }
-
 
 boolean clearDistanceLIDAR(int minDistance, int distances[]) {
   int sampleSize = 10;
