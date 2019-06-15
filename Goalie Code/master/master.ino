@@ -1,14 +1,15 @@
 #include "Adafruit_VL6180X.h"
 #include "Motors.h"
 #include "LIDARS.h"
+#include <algorithm>
 
-#define MAX_SPEED 180.0
+#define MAX_SPEED 255.0
 #define INTERRUPT_PIN 39
 #define SOLENOID_PIN 27
 #define BUTTON_PIN 12
 #define FIELD_WIDTH 78
 #define FIELD_LENGTH 105
-#define LIDAR_GOAL 
+#define LIDAR_GOAL
 #define BLUE_PIN 21
 #define GREEN_PIN 22
 #define RED_PIN 23
@@ -52,11 +53,15 @@ float rightSensor;
 float sideSum = 0.0;
 boolean sideSumConfident = false;
 
-bool turnFixed = false;
 bool interrupted = false;
 
+bool calibrating = true;
+
 void interrupt() {
-  interrupted = true;
+  if (!calibrating) {
+    interrupted = true;
+    //Serial.println("abasdf");
+  }
 }
 
 void setup() {
@@ -69,71 +74,90 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
-  pinMode(BLUE_PIN,OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
 
   flash();
-  
+
   motor.imuInit();
-//  if (! vl.begin()) {
-//    Serial.println("Failed to find TOF sensor");
-//          analogWrite(28,100);
-//
-//    while (1);
-//  }
-  Serial.println("start imu");
-  while(motor.isCalibrated()==false){
-      analogWrite(WHITEB_PIN,0);
+  //  if (! vl.begin()) {
+  //    Serial.println("Failed to find TOF sensor");
+  //          analogWrite(28,100);
+  //
+  //    while (1);
+  //  }
+  //Serial.println("start imu");
+  while (motor.isCalibrated() == false) {
+    analogWrite(WHITEB_PIN, 0);
   }
   Serial.println("done imu");
-  analogWrite(WHITEB_PIN,255);
-
+  analogWrite(WHITEB_PIN, 255);
 }
 
 void loop() {
-  if (interrupted > 100) {
+  if (interrupted) {
+    Serial.println("LINE");
     int side = 0;
     int currentAngle = motor.getRelativeAngle(0.0);
-    if(currentAngle > 45) side  = 90;
-    if(currentAngle > 135) side  = 180;
-    if(currentAngle < -45) side  = 270;
-    if(currentAngle < -135) side  = 180;
-    fixOutOfBounds(side);
+    //fixOutOfBounds();
+    getInBounds();
     return;
   }
-  
+
   lastXPos = xPos;
   lastYPos = yPos;
   checkForIMUZero();
   getCameraReadings();
-  calculateAngles();
+  calculateAngles2();
   checkFieldReorient();
   updateBallMotion();
-
-  if (false) { //reimplement
-    state = has_ball;
-  } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
+  //
+  //  if (false) { //reimplement
+  //    state = has_ball;
+  //  }
+  if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
     state = sees_ball;
   } else {
     state = invisible_ball;
   }
 
   switch (state) {
-    case invisible_ball: 
-      ledRed();
-      centerToGoal();
+    case invisible_ball:
+      ledBlue();
+      //centerToGoal();
+      motor.stopMotors();
       break;
     case sees_ball:
+      getToBall();
+      //testfunc();
       ledGreen();
-      if(attackMode){
-        if(millis()-attackModeStart > 2000) attackMode = false;
-        diagonalBall();
-      }
-      else{
-        attackMode = false;
-        blockBall();
-      }
+      //quadraticBall();
+
+      //Serial.println(ballAngle);
+      //      if(attackMode){
+      //        if(millis()-attackModeStart > 2000) attackMode = false;
+      //        diagonalBall();
+      //      }
+      //      else{
+      //        attackMode = false;
+      //        blockBall();
+      //      }
       break;
     case has_ball:
       break;
   }
 }
+
+
+void testfunc() {
+        leftSensor = lidars.readSensor2();
+        rightSensor = lidars.readSensor4();
+        Serial.println(rightSensor);
+        if(rightSensor + leftSensor > 170){
+            motor.driveToHeadingCorrected(90, 0, min(min(abs(yPos), rightSensor-30), MAX_SPEED));
+            if(rightSensor < 60){
+              motor.driveToHeadingCorrected(270, 0, 180);
+            }
+        }
+
+}
+
