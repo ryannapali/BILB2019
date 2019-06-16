@@ -1,5 +1,3 @@
-
-
 float getPathSlope() {
   if (xPos < 0) {
     return PATH_CURVINESS * (xPos - TARGET_DIST_BEHIND_BALL) / yPos;
@@ -12,20 +10,13 @@ float getPathSlope() {
 float angleFromSlope(float slope) {
   float angle = atan(slope);
   angle *= 57.2957795129;
-  if (yPos < 0) {
-    angle = -90.0 - angle;
-  } else {
-    angle = 90.0 - angle;
-  }
-
+  if (yPos < 0) angle = -90.0 - angle;
+  else angle = 90.0 - angle;
   return angle;
 }
 
 void checkFieldReorient() {
-  if (digitalRead(BUTTON_PIN) == LOW) {
-    motor.resetGyro();
-  } else {
-  }
+  if (digitalRead(BUTTON_PIN) == LOW)  motor.resetGyro();
 }
 
 void clearCameraBuffer() {
@@ -112,8 +103,8 @@ void getCameraReadings() {
   }
 }
 
-bool gyroSet = false;
 void checkForIMUZero() {
+  bool gyroSet = false;
   int val = 0;
   val = digitalRead(BUTTON_PIN);
   if (val == LOW) {
@@ -132,18 +123,6 @@ void checkForIMUZero() {
   calibrating = false;
 }
 
-
-void logLIDARS() {
-  Serial.print("front: ");
-  Serial.println(frontSensor);
-  Serial.print("right: ");
-  Serial.println(rightSensor);
-  Serial.print("back: ");
-  Serial.println(backSensor);
-  Serial.print("left: ");
-  Serial.println(leftSensor);
-}
-
 void calculateAngles() {
   // Only run this if you are in fact recieving x and y data. Otherwise, ballAngle does not change
   if (xPos > 1280 || yPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
@@ -157,12 +136,10 @@ void calculateAngles() {
     } else if (yPos < 0) {
       ballAngle += 360;
     }
-
     if (m == .75) {
       ballAngle = 2000; //ballAngle = 2000 when robot doesn't see ball
     }
   }
-  //  Serial.println(ballAngle);
   if (tPos > 1280 || oPos > 960) { //filter out and bad readings. 2000 is sign of bad readings
     goalAngle = 2000;
   } else {
@@ -174,7 +151,7 @@ void calculateAngles() {
     } else if (oPos < 0) {
       goalAngle += 360;
     }
-    if (m == .75) {
+    if (m == .75) { //480/640 = .75 so it is reads the max.
       goalAngle = 2000; //goalAngle = 2000 when robot doesn't see goal
     }
   }
