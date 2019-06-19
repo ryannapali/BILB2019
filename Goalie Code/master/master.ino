@@ -21,6 +21,9 @@ float tPos = 1;
 float oPos = 1;
 int failedGoalReadingCount = 0;
 
+float goalDist;
+float ballDist;
+
 float frontSensor;
 float backSensor;
 float leftSensor;
@@ -28,6 +31,8 @@ float rightSensor;
 
 bool interrupted = false;
 bool calibrating = true;
+
+int i = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -46,7 +51,11 @@ void loop() {
 
   //set state
   if (interrupted) state = out_of_bounds;
-  else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) state = sees_ball;
+  else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
+    if (ballAngle < 5 && ballAngle > 355 & ballDist < 50) state = has_ball; //CHECK THESE NUMBERS
+    else state = sees_ball;
+  }
+
   else state = invisible_ball;
 
   switch (state) {
@@ -55,8 +64,14 @@ void loop() {
       motor.stopMotors();
       break;
     case sees_ball:
+      i++;
+      if (i == 10) {
+        prepInvBall();
+        i = 0;
+      }
       ledGreen();
       getToBall();
+      //optimalPosition();
       break;
     case has_ball:
       break;

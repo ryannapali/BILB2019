@@ -47,6 +47,8 @@ void setupUtilities() {
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
 
+  pinMode(35, INPUT_PULLUP);
+
   for (int i = 0; i < 4; i++) {
     analogWrite(WHITEB_PIN, 255);
     analogWrite(WHITEA_PIN, 255);
