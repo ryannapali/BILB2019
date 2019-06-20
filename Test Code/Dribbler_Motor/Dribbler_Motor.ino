@@ -1,3 +1,6 @@
+#include "Motors.h"
+Motors motor = Motors();
+
 int DIR = 11;
 int SLP = 24;
 int PWM = 8;
@@ -14,6 +17,9 @@ void setup() {
 void loop() {
  digitalWrite(DIR, HIGH);
  digitalWrite(SLP, HIGH);
- analogWrite(PWM, 100);
+ analogWrite(PWM, 255);
  Serial.println(analogRead(CS));
+ motor.driveToHeading(90, 100);
+// motor.driveToHeadingCorrected(180.0, 180.0, MAX_BACK_SPEED);
+
 }

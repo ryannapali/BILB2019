@@ -8,9 +8,18 @@ Adafruit_VL6180X vl = Adafruit_VL6180X();
 Motors motor = Motors();
 LIDARS lidars = LIDARS();
 
+bool doingCornerShot = false;
+
 void interrupt() {
-  interrupted = true;
+  if (gyroHathBeenSet and doingCornerShot == false) {
+    interrupted = true;
+  }
 }
+
+float loopTime;
+bool shouldBackUp = false;
+
+float lastLostBall = 0.0;
 
 void setup() {  
   Serial5.begin(19200);
@@ -52,18 +61,32 @@ void setup() {
   analogWrite(WHITEB_PIN,255);
 }
 
-void loop() {
+void loop() {  
+//  printGoalPosition();
+//  logLIDARS();
+//  if (leftDistance < rightDistance) {
+//    Serial.println(leftDistance - 30.0*(oPos/75.0));
+//  } else {
+//    Serial.println(rightDistance + 30.0*(oPos/75.0));
+//  }
+//  Serial.println("oPos:");
+//  Serial.println(oPos);
+//  printBallPosition();
+  
   if (interrupted and millis()-lastCalledTurnToShoot > 100) {
     int side = 0;
     int currentAngle = motor.getRelativeAngle(0.0);
-    if(currentAngle > 45) side  = 90;
-    if(currentAngle > 135) side  = 180;
-    if(currentAngle < -45) side  = 270;
-    if(currentAngle < -135) side  = 180;
+    if(currentAngle > 45) side = 90;
+    if(currentAngle > 135) side = 180;
+    if(currentAngle < -45) side = 270;
+    if(currentAngle < -135) side = 180;
     fixOutOfBounds(side);
+//    if (frontDistance < 45) {
+//      shouldBackUp = true;
+//    }
     return;
   }
-
+  
   checkForIMUZero();
   getCameraReadings();
   calculateAngles();
@@ -72,10 +95,16 @@ void loop() {
   // Monitoring hiccups in ball possession
   bool inRange = ballRanges[0] < 59 and ballRanges[1] < 59 and ballRanges[2] < 59 and ballRanges[3] < 59 and ballRanges[4] < 59 and ballRanges[0] > 20 and ballRanges[1] > 20 and ballRanges[2] > 20 and ballRanges[3] > 20 and ballRanges[4] > 20;
   bool ballInCameraRange = xPos < MAXIMUM_HAS_BALL_X and xPos > MINIMUM_HAS_BALL_X and yPos < MAXIMUM_HAS_BALL_Y and yPos > MINIMUM_HAS_BALL_Y; 
+
+//  if (abs(motor.getRelativeAngle(0.0)) > 165) {
+//    inRange = true;
+//  }
+  
   if (not ballInCameraRange and inRange) {
     lostBallDueToPosition += 1;
-  } else if ((ballInCameraRange and inRange) or (not inRange)) {
-    lostBallDueToPosition = 0;
+  }
+  if (not inRange) {
+    lostBallDueToPosition = 100;
   }
 
   if (inRange) {
@@ -83,18 +112,22 @@ void loop() {
   } else {
     lostBallDueToTOF += 1;
   }
-  
+
   if ((ballInCameraRange or lostBallDueToPosition < 10) and (inRange or lostBallDueToTOF < 10)) {
-    state = has_ball; 
-  } else if (ballAngle != 2000 and (yPos != 0.0 and xPos != 0.0)) {
+    if (not turningToShoot) readLIDARS(0.0);
+    if (ballInCameraRange) lostBallDueToPosition = 0;
+    state = has_ball;
+  } else if (ballAngle != 2000 and yPos != 0.0 and xPos != 0.0) {
+    readLIDARS(500.0);
     state = sees_ball;
   } else {
+    readLIDARS(50.0);
     state = invisible_ball;
   }
 
-  if (state != has_ball) {
-    isOrbiting = false;
-  }
+//  if (state != has_ball) {
+//    isOrbiting = false;
+//  }
   if (state != has_ball and millis() - lastHadBall > 1000) {
     if (abs(motor.getRelativeAngle(0.0)) < 90) {
       shouldKissForwards = true;
@@ -103,26 +136,38 @@ void loop() {
     }
   }
 
+//  Serial.println(frontDistance);
+
   switch (state) {
     case invisible_ball: 
       // Do something smarter here later
+      lastLostBall = millis();
       ledRed();
-      if (millis() - lastBallReadTime > 1000) centerRobot();
-      else if (millis() - lastBallReadTime > 0) motor.stopMotors();  
+      motor.stopMotors();
+
+//      if (millis() - lastBallReadTime > 1000) centerRobot();
+//      else if (millis() - lastBallReadTime > 0) motor.stopMotors();  
       break;
     case sees_ball:  
-      if (not ballInCameraRange and lostBallDueToPosition >= 4) ledYellow();
+      lastLostBall = millis();
+      if (not ballInCameraRange and lostBallDueToPosition >= 10 and inRange) ledYellow();
       else ledBlue();
       lastBallReadTime = millis();
       diagonalBall();
       break;
     case has_ball:
-      ledGreen(); 
+      if (millis() - lastLostBall < 200.0) {
+        BACK_SPEED = 60.0;
+      } else {
+        BACK_SPEED = 60.0 + min((millis() - lastLostBall - 200.0)/500.0, 1.0)*(MAX_BACK_SPEED-60.0);
+      }
+      ledGreen();
       
       lastHadBall = millis();
       if (shouldKissForwards) {
         KISS();
       } else {
+//        cornerShoot();
         KISSBackwards();
       }
       break;

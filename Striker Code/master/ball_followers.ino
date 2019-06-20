@@ -37,8 +37,16 @@ void diagonalBall() {
     motor.dribble(0);
   }
 
-  float directToBallTurnHeading = min(abs(directToBallHeading), 35.0);
+  float directToBallTurnHeading = min(abs(directToBallHeading), 180.0);
   if (directToBallHeading < 0) directToBallTurnHeading *= -1.0;
 
-  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallTurnHeading*0.8, min(max(distanceFromBall, 75), MAX_SPEED));
+//  motor.driveToRelativeHeadingCorrected(directToBallHeading, -directToBallTurnHeading*0.8, min(max(distanceFromBall, 75), MAX_SPEED));
+//  Serial.println(min(max(distanceFromBall, 75.0), MAX_SPEED)/MAX_SPEED);
+//  min(max(distanceFromBall, 75.0), MAX_SPEED)/MAX_SPEED
+  float fracAngleOff = 1.0 - abs(directToBallHeading)/180.0;
+  float distanceFactor = max(abs(distanceFromBall - 50.0)/150.0, 1.0);
+  distanceFactor = 1.0;
+  //fracAngleOff * distanceFactor * MAX_SPEED
+  //min(max(distanceFromBall, 130.0), MAX_SPEED)/MAX_SPEED
+  motor.driveToRelativeHeadingCorrectedProportionalThrust(directToBallHeading, -directToBallTurnHeading, min(max(distanceFromBall, 130.0), MAX_SPEED)/MAX_SPEED, MAX_SPEED);
 }
