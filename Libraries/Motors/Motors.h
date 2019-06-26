@@ -45,7 +45,9 @@ public:
     
     void driveToRelativeHeadingCorrected(float angle, float targetOrientation, float speed);
     
-   void driveToHeadingCorrectedHoldDistance(float angle, float targetOrientation, float Speed, float distanceOff);
+    void driveToRelativeHeadingCorrectedProportionalThrust(float angle, float targetOrientation, float thrustPercentage, float maxSpeed);
+    
+    void driveToHeadingCorrectedHoldDistance(float angle, float targetOrientation, float Speed, float distanceOff);
     
     void turnToAbsoluteHeading(float targetAngle, float maxSpeed);
     
@@ -95,6 +97,9 @@ private:
     
     int max_speed = 255;
     int pause = 10;
+    
+    int oldCurrent = 0;
+    float start = -1.0;
     
     float imuZero = 0.0;
 };

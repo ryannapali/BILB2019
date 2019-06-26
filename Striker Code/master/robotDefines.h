@@ -1,5 +1,7 @@
 #define MAX_SPEED 200.0
-#define MAX_BACK_SPEED 140.0
+#define MAX_BACK_SPEED 130.0
+
+#define CURRENT_PIN 15
 
 float BACK_SPEED = 70.0;
 
@@ -17,10 +19,10 @@ float BACK_SPEED = 70.0;
 #define FIELD_WIDTH 183
 #define FIELD_LENGTH 244
 
-#define MINIMUM_HAS_BALL_X 40
-#define MAXIMUM_HAS_BALL_X 60
-#define MINIMUM_HAS_BALL_Y -15
-#define MAXIMUM_HAS_BALL_Y 15
+#define MINIMUM_HAS_BALL_X 35
+#define MAXIMUM_HAS_BALL_X 75
+#define MINIMUM_HAS_BALL_Y -25
+#define MAXIMUM_HAS_BALL_Y 25
 
 #define PIVOT_K 2.0
 
@@ -29,6 +31,19 @@ float BACK_SPEED = 70.0;
 
 #define MAX_FAILED_BALL_READS 4
 #define MAX_FAILED_GOAL_READS 30
+
+#define X_ORIGIN_CALIBRATION 40.0 
+#define Y_ORIGIN_CALIBRATION 8.0 
+//#define X_ORIGIN_CALIBRATION 20.0 
+//#define Y_ORIGIN_CALIBRATION -30.0
+#define PATH_CURVINESS 3.0
+#define TARGET_DIST_BEHIND_BALL 110.0
+#define VIDEO_WIDTH 640
+#define VIDEO_HEIGHT 480
+
+#define S_ONE_PIN 35
+#define S_TWO_PIN 36
+#define S_THREE_PIN 37
 
 bool gyroHathBeenSet = false;
 
@@ -104,11 +119,3 @@ bool isExecutingDodgeOnGoalie = false;
 float dodgeStartTime = 0.0;
 
 bool turningToShoot = false;
-
-//FROM STAGNANT FUNCTIONS
-#define X_ORIGIN_CALIBRATION 40.0 
-#define Y_ORIGIN_CALIBRATION 8.0 
-#define PATH_CURVINESS 3.0
-#define TARGET_DIST_BEHIND_BALL 110.0
-#define VIDEO_WIDTH 640
-#define VIDEO_HEIGHT 480

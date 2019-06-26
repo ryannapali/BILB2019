@@ -48,5 +48,5 @@ void diagonalBall() {
   distanceFactor = 1.0;
   //fracAngleOff * distanceFactor * MAX_SPEED
   //min(max(distanceFromBall, 130.0), MAX_SPEED)/MAX_SPEED
-  motor.driveToRelativeHeadingCorrectedProportionalThrust(directToBallHeading, -directToBallTurnHeading, min(max(distanceFromBall, 130.0), MAX_SPEED)/MAX_SPEED, MAX_SPEED);
+  motor.driveToRelativeHeadingCorrectedProportionalThrust(directToBallHeading, -directToBallTurnHeading, min(max(distanceFromBall, 120.0), MAX_SPEED)/MAX_SPEED, MAX_SPEED);
 }

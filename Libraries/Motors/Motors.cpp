@@ -35,6 +35,7 @@ void Motors::MotorsInit(){
     
     digitalWrite(_MTRSLP, HIGH);
     
+    analogWriteFrequency(8, 58593);
     analogWriteFrequency(3, 58593);
     analogWriteFrequency(4, 58593);
     analogWriteFrequency(29, 58593);
@@ -206,13 +207,19 @@ void Motors::stopMotors() {
 }
 
 void Motors::dribble(float power) {
-    if (checkMotorSwitchOn() == true) {
+    int current = analogRead(15);
+    if ((current > 45 and oldCurrent > 45) or (millis() - start < 1000 and start != -1.0)) {
+        start = millis();
+        digitalWrite(_DBDIR, LOW);
+        analogWrite(_DBPWM, 0);
+    } else if (checkMotorSwitchOn() == true) {
         digitalWrite(_DBDIR, HIGH);
         analogWrite(_DBPWM, power);
     } else {
         digitalWrite(_DBDIR, LOW);
         analogWrite(_DBPWM, 0);
     }
+    oldCurrent = current;
 }
 
 void Motors::driveToHeading(float angle, float speed) {
@@ -299,9 +306,47 @@ void Motors::driveToHeadingCorrected(float angle, float targetOrientation, float
     setM4Speed(-speed * normalizedProportionals[3]);
 }
 
+void Motors::driveToRelativeHeadingCorrectedProportionalThrust(float angle, float targetOrientation, float thrustPercentage, float maxSpeed) {
+    float adjustedAngle = angle - 180;
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    if (adjustedAngle >= 180) {
+        adjustedAngle -= 360;
+    }
+    if (adjustedAngle < 0) {
+        adjustedAngle += 360;
+    }
+    adjustedAngle = 360 - adjustedAngle;
+    
+    float relativeAngle = targetOrientation;
+    float turningPower = 1.3*relativeAngle/180.0;
+    if (turningPower < 0) {
+        turningPower = min(turningPower, -0.05);
+    } else {
+        turningPower = max(turningPower, 0.05);
+    }
+    float rad = getRad(adjustedAngle);
+    float proportionals[] = {sin(-rad + 3.92699082) * thrustPercentage + turningPower, sin(-rad + 5.4977871438) * thrustPercentage + turningPower, sin(-rad + 0.7853981634) * thrustPercentage + turningPower, sin(-rad + 2.35619449) * thrustPercentage + turningPower};
+    
+    float maxPower = max(max(abs(proportionals[0]), abs(proportionals[1])), max(abs(proportionals[2]), abs(proportionals[3])));
+    
+    if (maxPower > 1.0) {
+        proportionals[0] = proportionals[0] / maxPower;
+        proportionals[1] = proportionals[1] / maxPower;
+        proportionals[2] = proportionals[2] / maxPower;
+        proportionals[3] = proportionals[3] / maxPower;
+    }
+    
+    setM1Speed(-maxSpeed * proportionals[0]);
+    setM2Speed(-maxSpeed * proportionals[1]);
+    setM3Speed(-maxSpeed * proportionals[2]);
+    setM4Speed(-maxSpeed * proportionals[3]);
+}
+
 void Motors::driveToHeadingCorrectedHoldDistance(float angle, float targetOrientation, float speed, float distanceOff){
-if(speed > 210) speed = 210;
-float adjustedAngle = angle - 180;
+    if(speed > 210) speed = 210;
+    float adjustedAngle = angle - 180;
     if (adjustedAngle < 0) {
         adjustedAngle += 360;
     }
@@ -332,10 +377,8 @@ float adjustedAngle = angle - 180;
     setM2Speed((-speed * normalizedProportionals[1] * scaleDown) + distancePower);
     setM3Speed((-speed * normalizedProportionals[2] * scaleDown) - distancePower);
     setM4Speed((-speed * normalizedProportionals[3] * scaleDown) - distancePower);
-
+    
 }
-
-
 
 void Motors::turnToAbsoluteHeading(float targetAngle, float maxSpeed) {
     float relativeAngle = getRelativeAngle(targetAngle);
@@ -349,7 +392,8 @@ void Motors::turnToRelativeHeading(float targetAngle, float maxSpeed) {
     }
     
     /* Calculate required turning power */
-    float power = min(abs(2.5*targetAngle/180.0), 1.0);
+    float power = min(abs(2.25*targetAngle/180.0), 1.0);
+    power = max(power, 0.25);
     if (targetAngle < 0) power*= -1.0;
     
     spin(-maxSpeed * power);

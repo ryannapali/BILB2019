@@ -34,22 +34,22 @@ void getCameraReadings() {
     }
   }
   while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
+    if (interrupted) break;
   }
   char highChar1 = Serial5.read();
   char lowChar1 = Serial5.read();
   while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
+    if (interrupted) break;
   }
   char highChar2 = Serial5.read();
   char lowChar2 = Serial5.read();
   while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
+    if (interrupted) break;
   }
   char highChar3 = Serial5.read();
   char lowChar3 = Serial5.read();
   while (Serial5.available() < 2) {
-//    if (currentState == ON_LINE) break;
+    if (interrupted) break;
   }
   char highChar4 = Serial5.read();
   char lowChar4 = Serial5.read();
@@ -59,7 +59,6 @@ void getCameraReadings() {
   tPos = word(highChar3, lowChar3);
   oPos = word(highChar4, lowChar4);
 
-//and abs(VIDEO_WIDTH/2.0 - xPos + X_ORIGIN_CALIBRATION - oldXPos) < 30
   if (xPos < VIDEO_WIDTH and xPos > 0) {
     xPos -= VIDEO_WIDTH/2.0;
     xPos *= -1.0;
@@ -74,7 +73,7 @@ void getCameraReadings() {
       xPos = 0;
     }
   }
-// and abs(yPos - VIDEO_HEIGHT/2.0 + Y_ORIGIN_CALIBRATION - oldYPos) < 30567
+
   if (yPos < VIDEO_HEIGHT and yPos > 0) {
     yPos -= VIDEO_HEIGHT/2.0;
     yPos += Y_ORIGIN_CALIBRATION;
@@ -159,6 +158,7 @@ void updateTOFReadings() {
   ballRanges[3] = ballRanges[2];
   ballRanges[2] = ballRanges[1];
   ballRanges[1] = ballRanges[0];
+
   ballRanges[0] = vl.readRange();
 
   uint8_t status = vl.readRangeStatus();
@@ -169,98 +169,86 @@ void updateTOFReadings() {
 }
 
 void fixOutOfBounds(int side) {
-    logLIDARS();
-    
-    int slowerSpeed = 100; 
+  Serial.print("Out of bounds... current angle = ");
+  Serial.println(motor.getRelativeAngle(side));
+  logLIDARS();
+  
+  int slowerSpeed = 100; 
 
-    Serial.print("Side: ");
-    Serial.println(side);
-    Serial.println(abs(motor.getRelativeAngle(side)));
-    Serial.println(abs(motor.getRelativeAngle(side)) < 5);
-    if (abs(motor.getRelativeAngle(side)) < 5 or turnFixed) {
-      turnFixed = true;
-      
-      frontSensor = lidars.readSensor1();
-      backSensor = lidars.readSensor3();
-      leftSensor = lidars.readSensor2();
-      rightSensor = lidars.readSensor4();
-  
-      float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
-  
-      if (frontSensor <= minReading and frontSensor < 45) {
-        if (backSensor < 45) {
-          if (leftSensor < rightSensor) {
-            motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
-          } else {
-            motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
-          }
-        } else {
-          motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
-        }
-        return;
-      } else if (backSensor <= minReading and backSensor < 45) {
-        if (frontSensor < 45) {
-          if (leftSensor < rightSensor) {
-            motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
-          } else {
-            motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
-          }
-        } else {
-          motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
-        }
-        return;
-      } else if (rightSensor <= minReading and rightSensor < 45) {
-        if (leftSensor < 45) {
-          if (frontSensor < backSensor) {
-            motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
-          } else {
-            motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
-          }
+  if (abs(motor.getRelativeAngle(side)) < 5 or turnFixed) {
+    turnFixed = true;
+    
+    frontSensor = lidars.readSensor1();
+    backSensor = lidars.readSensor3();
+    leftSensor = lidars.readSensor2();
+    rightSensor = lidars.readSensor4();
+
+    float minReading = min(min(min(frontSensor, backSensor), leftSensor), rightSensor);
+
+    if (frontSensor <= minReading and frontSensor < 45) {
+      if (backSensor < 45) {
+        if (leftSensor < rightSensor) {
+          motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
         } else {
           motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
         }
-        return;
-      } else if (leftSensor <= minReading and leftSensor < 45) {
-        if (rightSensor < 45) {
-          if (frontSensor < backSensor) {
-            motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
-          } else {
-            motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
-          }
-        } else {
-          motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
-        }
-        return;
       } else {
-        motor.stopMotors();
-        interrupted = false;
-        turnFixed = false;
+        motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
       }
+      return;
+    } else if (backSensor <= minReading and backSensor < 45) {
+      if (frontSensor < 45) {
+        if (leftSensor < rightSensor) {
+          motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
+        } else {
+          motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
+        }
+      } else {
+        motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
+      }
+      return;
+    } else if (rightSensor <= minReading and rightSensor < 45) {
+      if (leftSensor < 45) {
+        if (frontSensor < backSensor) {
+          motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
+        } else {
+          motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
+        }
+      } else {
+        motor.driveToRelativeHeadingCorrected(270, 0, slowerSpeed);
+      }
+      return;
+    } else if (leftSensor <= minReading and leftSensor < 45) {
+      if (rightSensor < 45) {
+        if (frontSensor < backSensor) {
+          motor.driveToRelativeHeadingCorrected(-180, 0, slowerSpeed);
+        } else {
+          motor.driveToRelativeHeadingCorrected(0, 0, slowerSpeed);
+        }
+      } else {
+        motor.driveToRelativeHeadingCorrected(90, 0, slowerSpeed);
+      }
+      return;
     } else {
-      Serial.println("turning for OOB");
-      motor.turnToAbsoluteHeading(side, MAX_SPEED);
+      motor.stopMotors();
+      interrupted = false;
+      turnFixed = false;
+    }
+  } else {
+    motor.turnToAbsoluteHeading(side, MAX_SPEED);
   }
 }
-
-bool gyroSet = false;
 
 void checkForIMUZero() {
   int val = 0;
   val = digitalRead(BUTTON_PIN);
   if (val == LOW) {
-    Serial.println("RESETTING");
+    Serial.println("RESETTING GYRO");
     motor.resetGyro();
     gyroHathBeenSet = true;
-    gyroSet = true;
+    analogWrite(WHITEA_PIN,255);
   }
   else analogWrite(WHITEA_PIN,0);
-
-  if (gyroSet) {
-   analogWrite(WHITEA_PIN,255);
-   gyroSet=false;
-  } else {
-   analogWrite(WHITEA_PIN,0);
-  }
 }
 
 void ledWhite(){
@@ -305,13 +293,13 @@ void ledPurple(){
 }
 
 void logLIDARS() {
-  Serial.print("front: ");
-  Serial.println(frontSensor);
-  Serial.print("right: ");
-  Serial.println(rightSensor);
-  Serial.print("back: ");
-  Serial.println(backSensor);
-  Serial.print("left: ");
+  Serial.print("LIDARS: ");
+  Serial.print(frontSensor);
+  Serial.print(" --- ");
+  Serial.print(rightSensor);
+  Serial.print(" --- ");
+  Serial.print(backSensor);
+  Serial.print(" --- ");
   Serial.println(leftSensor);
 }
 
@@ -369,25 +357,25 @@ void readLIDARS(float readInterval) {
   if (millis() - lastLIDARRead >= readInterval) {
     lastLIDARRead = millis();
     float heading = motor.getRelativeAngle(0.0);
-    if (abs(heading) < 30) {
+    if (abs(heading) < 25) {
       float lengthScalar = cos(PI*abs(heading)/180.0);
       frontSensor = (lidars.readSensor1() - 5.0)*lengthScalar;
       backSensor = (lidars.readSensor3() + 5.0)*lengthScalar;
       leftSensor = (lidars.readSensor2() - 5.0)*lengthScalar;
       rightSensor = (lidars.readSensor4() + 5.0)*lengthScalar;
-    } else if (abs(heading) > 150) {
+    } else if (abs(heading) > 155) {
       float lengthScalar = abs(cos(PI*abs(heading)/180.0));
       frontSensor = (lidars.readSensor3() + 5.0)*lengthScalar;
       backSensor = (lidars.readSensor1() - 5.0)*lengthScalar;
       leftSensor = (lidars.readSensor4() + 5.0)*lengthScalar;
       rightSensor = (lidars.readSensor2() - 5.0)*lengthScalar;
-    } else if (heading > 60 and heading < 120) {
+    } else if (heading > 65 and heading < 115) {
       float lengthScalar = abs(cos(PI*abs(heading - 90.0)/180.0));
       frontSensor = (lidars.readSensor2() - 5.0)*lengthScalar;
       backSensor = (lidars.readSensor4() + 5.0)*lengthScalar;
       leftSensor = (lidars.readSensor3() + 5.0)*lengthScalar;
       rightSensor = (lidars.readSensor1() - 5.0)*lengthScalar;
-    } else if (heading < -60 and heading > -120) {
+    } else if (heading < -65 and heading > -115) {
       float lengthScalar = abs(cos(PI*abs(heading + 90.0)/180.0));
       frontSensor = (lidars.readSensor4() + 5.0)*lengthScalar;
       backSensor = (lidars.readSensor2() - 5.0)*lengthScalar;
@@ -395,18 +383,16 @@ void readLIDARS(float readInterval) {
       rightSensor = (lidars.readSensor3() + 5.0)*lengthScalar;
     }
 
-    Serial.print("sum: ");
-    Serial.println(frontSensor + backSensor);
     if (abs(frontSensor + backSensor - FIELD_LENGTH) < 8) {
       frontDistance = frontSensor;
       backDistance = backSensor;
       lastFrontSensor = frontSensor;
       lastBackSensor = backSensor;
-    } else if (abs(frontSensor - lastFrontSensor) < 15) {
+    } else if (abs(frontSensor - lastFrontSensor) < 20) {
       frontDistance = frontSensor;
       backDistance -= frontSensor - lastFrontSensor;
       lastFrontSensor = frontSensor;
-    } else if (abs(backSensor - lastBackSensor) < 15) { 
+    } else if (abs(backSensor - lastBackSensor) < 20) { 
       backDistance = backSensor;
       frontDistance -= backSensor - lastBackSensor;
       lastBackSensor = backSensor;
@@ -417,11 +403,11 @@ void readLIDARS(float readInterval) {
       rightDistance = rightSensor;
       lastLeftSensor = leftSensor;
       lastBackSensor = rightSensor;
-    } else if (abs(leftSensor - lastLeftSensor) < 15) {
+    } else if (abs(leftSensor - lastLeftSensor) < 20) {
       leftDistance = leftSensor;
       rightDistance -= leftSensor - lastLeftSensor;
       lastLeftSensor = leftSensor;
-    } else if (abs(rightSensor - lastRightSensor) < 15) { 
+    } else if (abs(rightSensor - lastRightSensor) < 20) { 
       rightDistance = rightSensor;
       leftDistance -= rightSensor - lastRightSensor;
       lastRightSensor = rightSensor;
@@ -430,20 +416,16 @@ void readLIDARS(float readInterval) {
 }
 
 void printBallPosition() {
-//  if (abs(xPos) > 500 or abs(yPos) > 500) {
-  Serial.println("Ball position: ");
-  Serial.println(xPos);
+  Serial.print("Ball position: ");
+  Serial.print(xPos);
+  Serial.print(", ");
   Serial.println(yPos);
-  Serial.println("");
-//  }
 }
 
 void printGoalPosition() {
-//  if (abs(xPos) > 500 or abs(yPos) > 500) {
   Serial.println("Goal position: ");
   Serial.println(tPos);
   Serial.println(oPos);
   Serial.println(goalAngle);
   Serial.println("");
-//  }
 }
