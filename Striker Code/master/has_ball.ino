@@ -82,6 +82,7 @@ bool shoot() {
 bool shouldFixHeading = false;
 float lastEncounteredEnemyFrontUs = 0.0;
 bool shouldStrafeDodgeRight;
+float angleError;
 
 // Keep It Simple Stupid (forwards)
 void KISS() {
@@ -90,9 +91,7 @@ void KISS() {
   useSideLIDAR = false;
   useFrontLIDAR = false;
 
-  float goalDistance = sqrt(tPos*tPos + oPos*oPos);
-
-  float angleError = motor.getRelativeAngle(0.0);
+  angleError = motor.getRelativeAngle(0.0);
 
   if (not turningToShoot) {
     if (abs(angleError) > 15) {
@@ -175,7 +174,7 @@ float startedStrafingAtGoal = 0.0;
 void KISSBackwards() {      
   motor.dribble(255);
 
-  float angleError = motor.getRelativeAngle(180.0);
+  angleError = motor.getRelativeAngle(180.0);
 
   if (backwardsStrategy == 0) {
     doingCornerShot = true;
@@ -194,6 +193,7 @@ void KISSBackwards() {
         motor.stopMotors();
         return;
       } else {
+        sideAngle = 0.0;
         if (leftDistance > 70 and rightDistance > 70) {
           backwardsStrategy = 1;
         } else {
@@ -234,8 +234,6 @@ void backToGoal() {
   useSideLIDAR = false;
   useFrontLIDAR = false;
   
-  float goalDistance = sqrt(tPos*tPos + oPos*oPos);
-
   if (goalAngle == 0 or (frontDistance > MAXIMUM_SHOT_DISTANCE and turningToShoot == false)) {
     startedStrafingAtGoal = 0.0;
     turningToShoot = false;
@@ -300,32 +298,42 @@ void backToGoal() {
 float targetAngle = 0.0;
 float targetDriveDirection = 0.0;
 float dodgeTargetAngle = 0.0;
-bool wasFacingOut = false;
+//bool wasFacingOut = false;
 bool shouldFixSideHeading = false;
 float decidedToDodge = 0;
 
 void cornerShoot() {
   float currentHeading = motor.getRelativeAngle(0.0);
+
+//  Serial6.println("corner shooting");
   
   doingCornerShot = true;
 
-  if (not isShooting) {
+  bool prettyPerpendicular = abs(currentHeading/90.0 - round(currentHeading/90.0)) < 0.12;
+//  if ((not isShooting and prettyPerpendicular and millis() - lastDidNotHaveBall < 2500) or sideAngle == 0.0) {
+  if (sideAngle == 0.0) {
     if (rightDistance > leftDistance) {
       sideAngle = 270.0;
-      sideDistance = leftDistance;
     } else {
       sideAngle = 90.0;
-      sideDistance = rightDistance;
     }
   }
+
+  if (sideAngle == 270.0) {
+    sideDistance = leftDistance;
+  } else {
+    sideDistance = rightDistance;
+  }
+
+  if (millis() - decidedToDodge > 10000) shouldDodge = false;
   
   // Goes sideways to the goal
   if ((frontDistance < 55 or (targetAngle == sideAngle + 0.1 and frontDistance < 70)) and not shouldDodge) {
-    useFrontLIDAR = true;
+//    useFrontLIDAR = true;
     
     if (targetAngle != sideAngle + 0.1) {
       motor.stopMotors();
-      delay(400);
+      delay(200);
     }
 
     if (analogRead(BACK_IR_PIN) >= 350 and isShooting == false) {
@@ -340,38 +348,19 @@ void cornerShoot() {
     targetDriveDirection = 360.0 - sideAngle - currentHeading;
   }
 
-  bool prettyPerpendicular = abs(currentHeading/90.0 - round(currentHeading/90.0)) < 0.15;
-
-  // Moves facing backwards to the goal
-  if (((frontDistance > 90 and not wasFacingOut) or (frontDistance > 110 and prettyPerpendicular) or frontDistance == 0.0) and not shouldDodge) {
-    targetAngle = 180.0;
-    
-    float wallFollowCorrection = 2.0*(sideDistance - 30.0);
-    wallFollowCorrection = min(wallFollowCorrection, 30.0);
-    if (sideDistance == 0.0) wallFollowCorrection = 0.0;
-    if (sideAngle == 270.0) wallFollowCorrection *= -1.0;
-
-    if (sideDistance < 45) {
-      useSideLIDAR = true;
-    }
-
-    targetDriveDirection = -currentHeading + wallFollowCorrection;
-  } 
-
-  // Move facing outwards to the goal
-  if ((((frontDistance > 55 and targetAngle != (sideAngle + 0.1)) or frontDistance > 70) and (frontDistance < 90 or (frontDistance < 110 and prettyPerpendicular and wasFacingOut))) and not shouldDodge) {
+  if (((frontDistance > 55 and targetAngle != (sideAngle + 0.1)) or frontDistance > 70) and not shouldDodge) {
     targetAngle = sideAngle;
     
     if (abs(currentHeading - (180.0 - targetAngle)) > 25) {
       shouldFixSideHeading = true;
-    } else if (abs(currentHeading - (180.0 - targetAngle)) < 10) {
+    } else if (abs(currentHeading - (180.0 - targetAngle)) < 8) {
       shouldFixSideHeading = false;
       useSideLIDAR = true;
       useFrontLIDAR = true;
     }
     
-    if (frontDistance < 55 and isShooting == false) {
-      if (analogRead(BACK_IR_PIN) >= 400) {
+    if (frontDistance < 60 and isShooting == false) {
+      if (analogRead(BACK_IR_PIN) >= 300) {
         // MISSION ABORT: DODGE!!!
         if (not shouldDodge) {
           dodgeTargetAngle = sideAngle - 180.0;
@@ -382,26 +371,21 @@ void cornerShoot() {
     }
     
     if (shouldFixSideHeading and targetAngle == 90.0) {
-      targetDriveDirection = 70.0;
-      targetAngle = 30.0;
+      targetDriveDirection = 80.0;
+      targetAngle = 40.0;
     } else if (shouldFixSideHeading and targetAngle == 270.0) {
-      targetDriveDirection = -70.0;
-      targetAngle = -30.0;
+      targetDriveDirection = -80.0;
+      targetAngle = -40.0;
     } else {
       float wallFollowCorrection = 2.0*(sideDistance - 30.0);
       wallFollowCorrection = min(wallFollowCorrection, 30.0);
       if (sideDistance == 0.0) wallFollowCorrection = 0.0;
       if (sideAngle == 270.0) wallFollowCorrection *= -1.0;
+      targetAngle = sideAngle;
       targetDriveDirection = -currentHeading + wallFollowCorrection;
     }
   }
-
-  if (targetAngle == sideAngle or abs(targetAngle) == 30.0) {
-    wasFacingOut = true;
-  } else {
-    wasFacingOut = false;
-  }
-
+  Serial6.println(sideDistance);
   if (((sideDistance > 68 and frontDistance < 60) or isShooting) and frontDistance != 0.0 and sideDistance != 0.0) {
     isShooting = true;
 
@@ -438,15 +422,19 @@ void cornerShoot() {
       }
       
       if (dodgeTargetAngle == -90.0) {
-        motor.driveToRelativeHeadingCorrected(80.0, -11.0, (min(millis() - decidedToDodge - 200.0, 1000.0)/1000.0)*55 + 25);
+        motor.driveToRelativeHeadingCorrected(80.0, -11.0, (min(millis() - decidedToDodge - 200.0, 1000.0)/1000.0)*55 + 15);
       } else {
-        motor.driveToRelativeHeadingCorrected(-80.0, 11.0, (min(millis() - decidedToDodge - 200.0, 1000.0)/1000.0)*55 + 25);
+        motor.driveToRelativeHeadingCorrected(-80.0, 11.0, (min(millis() - decidedToDodge - 200.0, 1000.0)/1000.0)*55 + 15);
       }
     } else {
       shouldDodge = false;
     }
   } else if (targetAngle != 0 and targetDriveDirection != 0) {
-    motor.driveToHeadingCorrected(targetDriveDirection, targetAngle, 70);
+    if (abs(targetAngle) - 40 == 0.0 and abs(targetDriveDirection) - 80.0 == 0.0) {
+      motor.driveToRelativeHeadingCorrected(targetDriveDirection, targetAngle, 100);
+    } else {
+      motor.driveToHeadingCorrected(targetDriveDirection, targetAngle, 80);
+    }
   } else {
     motor.stopMotors();
   }

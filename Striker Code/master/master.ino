@@ -42,6 +42,7 @@ void setup() {
   pinMode(S_ONE_PIN, INPUT_PULLUP);
   pinMode(S_TWO_PIN, INPUT_PULLUP);
   pinMode(S_THREE_PIN, INPUT_PULLUP);
+  pinMode(S_FOUR_PIN, INPUT_PULLUP);
 
   attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
 
@@ -50,9 +51,9 @@ void setup() {
   pinMode(BLUE_PIN, OUTPUT);
 
   Serial6.println("set pins");
-  analogWrite(RED_PIN,255);
-  analogWrite(GREEN_PIN,255);
-  analogWrite(BLUE_PIN,255);
+  analogWrite(RED_PIN, 255);
+  analogWrite(GREEN_PIN, 255);
+  analogWrite(BLUE_PIN, 255);
   
   flash();
 
@@ -61,15 +62,15 @@ void setup() {
 
   while (! vl.begin()) {
     Serial6.println("Failed to find TOF sensor");
-    (200);
+    delay(200);
   }
-  
   Serial6.println("Found TOF sensor");
   
   Serial6.println("start imu");
   while (motor.isCalibrated() == false) {
       analogWrite(RED_PIN,0);
   }
+
   Serial6.println("done imu");
   analogWrite(RED_PIN,255);
 }
@@ -175,6 +176,8 @@ void loop() {
       break;
     case sees_ball:  
       lastDidNotHaveBall = millis();
+      lastBallReadTime = millis();
+
       backwardsStrategy = 0;
       if (doingCornerShot and millis() - lastHadBall > 100) {
         doingCornerShot = false;
@@ -183,7 +186,6 @@ void loop() {
       }
 
       ledRed();
-      lastBallReadTime = millis();
       
       if (shouldWriteLow) return;
       

@@ -74,7 +74,7 @@ bool useFrontLIDAR = false;
 bool shouldWriteLow = false;
 float wroteHigh = 0.0;
 
-float sideAngle;
+float sideAngle = 0.0;
 float sideDistance;
 
 enum State { has_ball, sees_ball, invisible_ball};
@@ -99,15 +99,9 @@ float oldFrontSensor;
 float oldBackSensor;
 float oldLeftSensor;
 float oldRightSensor;
-int failedFrontReadCount = 0;
-int failedBackReadCount = 0;
-int failedLeftReadCount = 0;
-int failedRightReadCount = 0;
 
 bool interrupted = false;
 bool turnFixed = false;
-
-bool readyToShoot = false;
 
 float frontDistance;
 float backDistance;

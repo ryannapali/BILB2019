@@ -397,12 +397,12 @@ void readLIDARS(float readInterval) {
     } else { return; }
 
     if (abs(frontSensor + backSensor - FIELD_LENGTH) < 15 or useFrontLIDAR) {
-      if (useFrontLIDAR) {
+      if (useFrontLIDAR and frontSensor < FIELD_LENGTH) {
 //        Serial6.println("Using front LIDAR...");
         frontDistance = frontSensor;
         lastFrontSensor = frontSensor;
         backDistance = FIELD_LENGTH - frontSensor;
-      } else {
+      } else if (not useFrontLIDAR) {
         frontDistance = frontSensor;
         backDistance = backSensor;
         lastFrontSensor = frontSensor;
@@ -421,11 +421,11 @@ void readLIDARS(float readInterval) {
     if (abs(leftSensor + rightSensor - FIELD_WIDTH) < 10 or useSideLIDAR) {
       if (useSideLIDAR) {
 //        Serial6.println("Using side LIDAR...");
-        if (sideAngle == 90.0) {
+        if (sideAngle == 90.0 and rightSensor < FIELD_WIDTH) {
           rightDistance = rightSensor;
           lastRightSensor = rightSensor;
           leftDistance = FIELD_WIDTH - rightSensor;
-        } else {
+        } else if (leftSensor < FIELD_WIDTH) {
           leftDistance = leftSensor;
           lastLeftSensor = leftSensor;
           rightDistance = FIELD_WIDTH - leftSensor;
