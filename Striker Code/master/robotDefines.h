@@ -1,4 +1,4 @@
-#define MAX_SPEED 200.0
+#define MAX_SPEED 230.0
 #define MAX_BACK_SPEED 130.0
 
 #define CURRENT_PIN 15
@@ -13,6 +13,9 @@ float BACK_SPEED = 70.0;
 #define RED_PIN 14
 #define GREEN_PIN 10
 #define BLUE_PIN 9
+//#define RED_PIN 23
+//#define GREEN_PIN 22
+//#define BLUE_PIN 21
 #define WHITEA_PIN 17
 #define WHITEB_PIN 28
 
@@ -20,9 +23,9 @@ float BACK_SPEED = 70.0;
 #define FIELD_LENGTH 244
 
 #define MINIMUM_HAS_BALL_X 35
-#define MAXIMUM_HAS_BALL_X 75
-#define MINIMUM_HAS_BALL_Y -25
-#define MAXIMUM_HAS_BALL_Y 25
+#define MAXIMUM_HAS_BALL_X 65
+#define MINIMUM_HAS_BALL_Y -20
+#define MAXIMUM_HAS_BALL_Y 20
 
 #define PIVOT_K 2.0
 
@@ -32,8 +35,8 @@ float BACK_SPEED = 70.0;
 #define MAX_FAILED_BALL_READS 4
 #define MAX_FAILED_GOAL_READS 30
 
-#define X_ORIGIN_CALIBRATION 40.0 
-#define Y_ORIGIN_CALIBRATION 8.0 
+#define X_ORIGIN_CALIBRATION 30.0 
+#define Y_ORIGIN_CALIBRATION 4.0 
 //#define X_ORIGIN_CALIBRATION 20.0 
 //#define Y_ORIGIN_CALIBRATION -30.0
 #define PATH_CURVINESS 3.0
@@ -44,6 +47,7 @@ float BACK_SPEED = 70.0;
 #define S_ONE_PIN 35
 #define S_TWO_PIN 36
 #define S_THREE_PIN 37
+#define S_FOUR_PIN 38
 
 bool gyroHathBeenSet = false;
 
@@ -64,6 +68,14 @@ int lostBallDueToPosition = 0;
 int lostBallDueToTOF = 0;
 
 bool shouldKissForwards = false;
+bool useSideLIDAR = false;
+bool useFrontLIDAR = false;
+
+bool shouldWriteLow = false;
+float wroteHigh = 0.0;
+
+float sideAngle;
+float sideDistance;
 
 enum State { has_ball, sees_ball, invisible_ball};
 State state = invisible_ball;

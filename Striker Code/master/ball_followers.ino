@@ -32,9 +32,9 @@ void diagonalBall() {
   float distanceFromBall = sqrt(xPos*xPos + yPos*yPos);
   float directToBallHeading = angleFromSlope(xPos/yPos);
   if (distanceFromBall < 100) {
-    motor.dribble(255);
+    motor.dribble(100);
   } else {
-    motor.dribble(0);
+    if (millis() - lastHadBall > 500) motor.dribble(0);
   }
 
   float directToBallTurnHeading = min(abs(directToBallHeading), 180.0);
@@ -48,5 +48,5 @@ void diagonalBall() {
   distanceFactor = 1.0;
   //fracAngleOff * distanceFactor * MAX_SPEED
   //min(max(distanceFromBall, 130.0), MAX_SPEED)/MAX_SPEED
-  motor.driveToRelativeHeadingCorrectedProportionalThrust(directToBallHeading, -directToBallTurnHeading, min(max(distanceFromBall, 120.0), MAX_SPEED)/MAX_SPEED, MAX_SPEED);
+  motor.driveToRelativeHeadingCorrectedProportionalThrust(directToBallHeading, -directToBallTurnHeading, min(max(1.5*distanceFromBall, 120.0), MAX_SPEED)/MAX_SPEED, MAX_SPEED);
 }

@@ -7,14 +7,14 @@ void setup() {
 }
 
 void loop() {
-  Serial.print(analogRead(A0));//left
-  Serial.print("    ");
-  Serial.print(analogRead(A1)); //right
-  Serial.print("    ");
-  Serial.print(analogRead(A2));//front
-  Serial.print("    ");
-  Serial.print(analogRead(A3)); //back
-  Serial.println(" ");
+//  Serial.print(analogRead(A0));//left
+//  Serial.print("    ");
+//  Serial.print(analogRead(A1)); //right
+//  Serial.print("    ");
+//  Serial.print(analogRead(A2));//front
+//  Serial.print("    ");
+//  Serial.print(analogRead(A3)); //back
+//  Serial.println(" ");
 
   if (min(min(min(analogRead(A0), analogRead(A1)), analogRead(A2)), analogRead(A3)) < 100) {
     digitalWrite(4, HIGH);
