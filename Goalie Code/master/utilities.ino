@@ -37,8 +37,6 @@ void ledRed() {
 }
 
 void setupUtilities() {
-  delay(600);
-  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
 
   pinMode(INTERRUPT_PIN, INPUT);
   pinMode(SOLENOID_PIN, OUTPUT);
@@ -46,8 +44,13 @@ void setupUtilities() {
   pinMode(RED_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
-
   pinMode(35, INPUT_PULLUP);
+  pinMode(36, INPUT_PULLUP);
+  pinMode(37, INPUT_PULLUP);
+
+
+  delay(600);
+  attachInterrupt(digitalPinToInterrupt(INTERRUPT_PIN), interrupt, RISING); //Interrupts when digitalpin rises from LOW to HIGH
 
   for (int i = 0; i < 4; i++) {
     analogWrite(WHITEB_PIN, 255);
@@ -63,7 +66,6 @@ void setupTOF() {
   if (! vl.begin()) {
     Serial.println("Failed to find TOF sensor");
     analogWrite(28, 100);
-
     while (1);
   }
 }

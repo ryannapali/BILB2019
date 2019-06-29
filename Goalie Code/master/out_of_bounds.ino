@@ -23,7 +23,7 @@ void getInBounds() {
     if (!f) y--, isClear = false;
     if (!b) y++, isClear = false;
     if (x == 0 && y == 0) {
-      Serial.println("spin to goal");
+      //Serial.println("spin to goal");
       if (backSensor > 120 ) {
         motor.driveToHeadingCorrected(180, 0, slowerSpeed);
       }
@@ -32,10 +32,10 @@ void getInBounds() {
       }
     } else {
 
-      Serial.println("moving away");
+      //Serial.println("moving away");
       int ang = xyToAngle(x, y);
-      Serial.print("Angle : ");
-      Serial.println(ang);
+      //Serial.print("Angle : ");
+      //Serial.println(ang);
       motor.driveToHeadingCorrected(ang, 0, slowerSpeed);
     }
 
