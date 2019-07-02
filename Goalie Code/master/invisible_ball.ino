@@ -1,8 +1,10 @@
 boolean farAway;
 int startTime;
 
-
 void invBall() {
+  backSensor = lidars.readSensor3();
+  leftSensor = lidars.readSensor2();
+  rightSensor = lidars.readSensor4();
   if (firstInvBall) {
     startTime = millis();
     firstInvBall = false;
@@ -30,7 +32,6 @@ void invBall() {
   }
 }
 
-
 int determineSide() {
   int xLocation;
   if (whichSide() == 1) { //center
@@ -54,8 +55,3 @@ int determineSide() {
   }
   return xLocation;
 }
-
-//if the ball is far away and the ball disappears -> go to center of the goal region.
-
-//if the ball is near and the ball disappears -> go to that edge of the goal.
-

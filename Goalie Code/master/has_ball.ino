@@ -1,6 +1,9 @@
 boolean shot = false;
 
 void ballCharge() {
+  backSensor = lidars.readSensor3();
+  
+
   if (millis() - commitTimer > 5000 || shot || (yPos == 0.0 and xPos == 0.0)) {
     notMoved = false;
     state = sees_ball;
@@ -18,23 +21,23 @@ void ballCharge() {
   }
 }
 
-
 void hasBall() {
-    //Serial.println("driving to shoot");
-    motor.dribble(255);
-    int driveAngle = 0;
-    if (leftSensor > rightSensor) driveAngle += (leftSensor - rightSensor);
-    else driveAngle = 360 - (leftSensor - rightSensor);
+  //Serial.println("driving to shoot");
+  motor.dribble(255);
+  int driveAngle = 0;
+  leftSensor = lidars.readSensor2();
+  rightSensor = lidars.readSensor4();
+  if (leftSensor > rightSensor) driveAngle += (leftSensor - rightSensor);
+  else driveAngle = 360 - (leftSensor - rightSensor);
 
-    if ( backSensor < 100) motor.driveToHeadingCorrected(driveAngle, 0, min(2 * (125 - backSensor), MAX_SPEED));
-    else getToShoot();
+  if ( backSensor < 100) motor.driveToHeadingCorrected(driveAngle, 0, min(2 * (125 - backSensor), MAX_SPEED));
+  else getToShoot();
 }
 
 void getToShoot() {
   motor.stopMotors();
   shoot();
 }
-
 
 float lastShootTime = 0.0;
 void shoot() {
@@ -57,4 +60,3 @@ void chargeBall() {
     hasBall();
   }
 }
-

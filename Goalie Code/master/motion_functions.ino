@@ -1,34 +1,31 @@
 boolean goBack = false;
+int driveSpeed;
 
 
 void getToBall() {
-
-
-  if (digitalRead(35) == LOW) {
-    if (backSensor > 120 || goBack) { // 
-      goBack = true;
-      backSensor = lidars.readSensor3();
-      leftSensor = lidars.readSensor2();
-      rightSensor = lidars.readSensor4();
-      goToLocation(90, 45, leftSensor);
-      if (backSensor < 70) goBack = false;
-    }
-    else {
-      option1();
-    }
+  if (backSensor > 120 || goBack) { //
+    goBack = true;
+    goToLocation(90, 45, leftSensor);
+    if (backSensor < 70) goBack = false;
   }
+  else if (digitalRead(35) == LOW) {
+    option1();
+  }
+
   else {
+
     option2();
+
   }
-
 }
-
-int driveSpeed;
 
 
 void option1() {
   int driveAngle;
   int sideBlockRange = 90 / 2;
+  backSensor = lidars.readSensor3();
+  leftSensor = lidars.readSensor2();
+  rightSensor = lidars.readSensor4();
 
   if ((backSensor < 90 || ballDist < 50) && (ballAngle > sideBlockRange) && (ballAngle < 360 - sideBlockRange)) {
     driveAngle = sideBlock();
@@ -61,11 +58,40 @@ void option1() {
   }
 }
 
+int oldDriveSpeed;
+
 void option2() {
-    int angle = 270;
-    int stayBuffer = 5;
-    if (ballAngle > stayBuffer and ballAngle < 180) angle = 90;
-    motor.driveToHeadingCorrected(angle, 0, min(ballAngle*ballAngle*.01, MAX_SPEED));
+  backSensor = lidars.readSensor3();
+  leftSensor = lidars.readSensor2();
+  rightSensor = lidars.readSensor4();
+  int angle = 270 - (backSensor - 50);
+  int stayBuffer = 5;
+  int k = .04;
+  int bA = ballAngle;
+  if (bA > 180) bA = 360 - bA;
+  if (ballAngle > stayBuffer and ballAngle < 180) {
+    angle = 90 + (backSensor - 50);
+  }
+  Serial.print(bA);
+  Serial.print("    ");
+  int driveSpeed = min(0.2 * bA * bA, MAX_SPEED);
+  //if (abs(oldDriveSpeed - driveSpeed) > 50) driveSpeed = oldDriveSpeed;
+  Serial.println(driveSpeed);
+  oldDriveSpeed = driveSpeed;
+  if (bA < 15) driveSpeed = 0;
+  int blockSize = 70;
+  if (min(leftSensor, rightSensor) < blockSize) {
+    if (leftSensor < blockSize && ballAngle < 360 && ballAngle > 180) {
+      motor.stopMotors();
+
+    }
+    else if (rightSensor < blockSize && ballAngle > 0 && ballAngle < 180) {
+      motor.stopMotors();
+    }
+    else motor.driveToHeadingCorrected(angle, 0, driveSpeed);
+  }
+  else motor.driveToHeadingCorrected(angle, 0, driveSpeed);
+
 }
 
 /*
@@ -76,7 +102,6 @@ void option2() {
        Moves to that angle
 */
 
-int oldSpeed = 0;
 
 int optimalPosition() { //returns ball angle
   ballDist += 75;
@@ -120,10 +145,9 @@ int optimalPosition() { //returns ball angle
   linearAng = abs(linearAng);
   if ((linearAng > 180 - (bufferAng / 2)) && (linearAng < 180 + (bufferAng / 2))) linear = true;
   else linear = false;
-  int blockSpeed = min(MAX_SPEED, max(7 * abs((180 - linearAng)), .5 * abs(goalDist - ballDist)));
+  int blockSpeed = min(MAX_SPEED, max(4.6 * abs((180 - linearAng)), .5 * abs(goalDist - ballDist)));
 
-  if (abs(goalDist - ballDist) < bufferDist && linear) { // || abs(oldSpeed - blockSpeed) > 50
-    //motor.stopMotors();
+  if (abs(goalDist - ballDist) < bufferDist && linear) {
     driveSpeed = 0;
   }
   else {
@@ -131,7 +155,6 @@ int optimalPosition() { //returns ball angle
     driveSpeed = blockSpeed;
   }
   return driveAngle;
-  oldSpeed = blockSpeed;
 
 }
 
@@ -185,4 +208,3 @@ float angleWithSlope(float slope, int yDiff) {
   else angle = 369 - 90 - angle;
   return angle;
 }
-

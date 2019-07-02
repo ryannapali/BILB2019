@@ -13,7 +13,6 @@ float ballAngle;
 float goalAngle;
 float newBS;
 float newLS;
-float goodDriveAngle;
 enum State { sees_ball, invisible_ball, out_of_bounds, charge};
 State state = invisible_ball;
 
@@ -22,7 +21,6 @@ float yPos = 1;
 int failedBallReadingCount = 0;
 float tPos = 1;
 float oPos = 1;
-boolean firstInvBall = true;
 int failedGoalReadingCount = 0;
 
 float lastXPos;
@@ -38,34 +36,28 @@ float backSensor;
 float leftSensor;
 float rightSensor;
 
+int frontDistance;
+
 int startTimerNow;
+int commitTimer;
 
 bool notMoved = false;
+bool firstInvBall = true;
 
 bool interrupted = false;
 bool calibrating = true;
-int frontDistance;
-int i = 0;
 
-int commitTimer;
 
 void setup() {
   Serial.begin(115200);
   Serial5.begin(19200);
-
-  //Serial.println(digitalRead(36));
-
-
+  
   setupUtilities();
   //setupTOF();
   setupIMU();
 }
 
 void loop() {
-
-  backSensor = lidars.readSensor3();
-  leftSensor = lidars.readSensor2();
-  rightSensor = lidars.readSensor4();
 
   frontDistance = analogRead(20);
   checkForIMUZero();
@@ -75,8 +67,10 @@ void loop() {
   ballDist = sqrt(sq(xPos) + sq(yPos));
 
   //set state
+  int lastDist = sqrt(sq(lastXPos) + sq(lastYPos));
 
-  if (abs(xPos - lastXPos != 0)  || state == invisible_ball || notMoved) {
+
+  if (abs(ballDist - lastDist < 7)  || state == invisible_ball || notMoved) {
     startTimerNow = millis();
     notMoved = false;
   }
@@ -84,7 +78,6 @@ void loop() {
     notMoved = true;
   }
   else  notMoved = false;
-  Serial.println(whichSide());
 
 
 
@@ -103,28 +96,23 @@ void loop() {
 
   switch (state) {
     case invisible_ball:
-      //Serial.println("inv");
-      commitTimer = millis();
       ledRed();
+      commitTimer = millis();
       invBall();
       motor.dribble(0);
       break;
     case sees_ball:
       commitTimer = millis();
-      Serial.println(determineSide());
       firstInvBall = true;
       ledGreen();
-      //getToBall();
+      getToBall();
       motor.dribble(0);
       break;
     case out_of_bounds:
       commitTimer = millis();
-      //Serial.println("out");
       getInBounds();
       break;
     case charge:
-      //Serial.println("charge");
-      //state = sees_ball;
       ballCharge();
       break;
   }
